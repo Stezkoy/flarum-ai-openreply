@@ -1,18 +1,16 @@
 {
     "private": true,
     "dependencies": {
-        "flarum-webpack-config": "^1.0.0",
-        "webpack": "^4.0.0",
+        "flarum-webpack-config": "^3.0.0",
+        "webpack": "^5.0.0",
         "webpack-cli": "^4.0.0"
     },
     "devDependencies": {
-        "flarum-tsconfig": "^1.0.0"
+        "flarum-tsconfig": "^2.0.0"
     },
     "scripts": {
         "dev": "webpack --mode development --watch",
-        "build": "webpack --mode production",
-        "format": "prettier --write src",
-        "format-check": "prettier --check src"
+        "build": "webpack --mode production"
     },
     "prettier": "@flarum/prettier-config",
     "name": "@michaelbelgium/flarum-chatgpt",
