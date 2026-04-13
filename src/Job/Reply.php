@@ -2,6 +2,7 @@
 
 namespace MichaelBelgium\FlarumAIAutoReply\Job;
 
+use Carbon\Carbon;
 use Flarum\Post\CommentPost;
 use Flarum\Queue\AbstractJob;
 use GuzzleHttp\Exception\ClientException;
@@ -41,12 +42,11 @@ class Reply extends AbstractJob
         {
             $content = $client->completions($this->conversation);
 
-            $post = CommentPost::reply(
-                $this->discussionId,
-                $content,
-                $this->assistantId,
-                null,
-            );
+            $post = new CommentPost();
+            $post->discussion_id = $this->discussionId;
+            $post->created_at = Carbon::now();
+            $post->user_id = $this->assistantId;
+            $post->content = $content;
 
             $post->save();
         } catch (ClientException $e) {
