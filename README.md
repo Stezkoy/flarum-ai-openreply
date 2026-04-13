@@ -14,7 +14,7 @@ The auto-answer feature uses the OpenAI gpt-5-mini model by default to generate 
 
 ## Installation
 
-This extension requires **Flarum >= 1.8** and **PHP 8.2**.
+This extension requires **Flarum >= 2.0** and **PHP 8.4**.
 
 Install with composer:
 
