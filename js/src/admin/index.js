@@ -8,7 +8,7 @@ const models = {
         name: 'Open AI',
         modelsUrl: 'https://platform.openai.com/docs/models/overview',
         keysUrl: 'https://platform.openai.com/account/api-keys',
-        defaultModel: 'gpt-5-mini',
+        defaultModel: 'gpt-5.4-mini',
     },
     anthropic: {
         name: 'Anthropic',
@@ -26,7 +26,7 @@ const models = {
         name: 'Google (Gemini)',
         modelsUrl: 'https://ai.google.dev/gemini-api/docs/models',
         keysUrl: 'https://aistudio.google.com/api-keys',
-        defaultModel: 'gemini-2.5-flash-lite',
+        defaultModel: 'gemini-3.1-flash-lite-preview',
     },
 };
 
