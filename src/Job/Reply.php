@@ -50,8 +50,8 @@ class Reply extends AbstractJob
 
             $post->save();
         } catch (ClientException $e) {
-            $response = json_decode($e->getResponse()->getBody());
-            $logger->error('[AI-AutoReply] Client error while generating reply: ' .$response);
+            $logger->error('[AI-AutoReply] Client error while generating reply:');
+            $logger->error($e->getResponse()->getBody());
         } catch (\Exception $e) {
             $logger->error('[AI-AutoReply] Error while generating reply: ' . $e->getMessage());
         }
