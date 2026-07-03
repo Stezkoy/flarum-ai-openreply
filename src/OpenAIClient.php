@@ -24,7 +24,7 @@ class OpenAIClient extends Platform
                 'model' => $this->resolveModel(),
                 'messages' => $messages,
                 'max_completion_tokens' => $this->maxTokens,
-                'temperature' => $this->maxTokens ?? 1,
+                'temperature' => $this->temperature ?? 1,
             ]
         ]);
 

@@ -15,14 +15,8 @@ class GoogleClient extends Platform
             'messages' => $messages,
             'max_completion_tokens' => $this->maxTokens,
             'model' => $this->resolveModel(),
+            'temperature' => $this->temperature,
         ];
-
-        if ($this->temperature !== null)
-        {
-            $options['generationConfig'] = [
-                'temperature' => $this->temperature
-            ];
-        }
 
         $response = $this->client->post('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', [
             RequestOptions::JSON => $options
