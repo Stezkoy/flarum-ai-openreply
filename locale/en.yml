@@ -23,13 +23,16 @@ stezkoy-ai-openreply:
       actions_label: Actions
       actions_help: "Check the connection to the opencode server, or close all active sessions to free memory."
       check_connection_label: Check connection
+      session_count_label: Count sessions
       close_all_sessions_label: Close all sessions
       connection_success: Connection successful. The opencode server is reachable.
       connection_success_with_model: "Connection successful. Model: {model}."
       connection_success_default_model: "Connection successful. No model set — the server default {model} will be used."
       connection_success_no_model: "Connection successful. No model set — the server default will be used."
       connection_fail: Connection failed. Make sure the server is running and credentials are correct.
-      sessions_closed: "Extension sessions deleted. Other server sessions were not affected. Total sessions on the server: {total}."
+      sessions_closed: Sessions closed.
+      session_count_result: "Sessions on the server: {total}. Extension sessions: {extension}."
+      session_count_fail: Could not count sessions. Check the connection first.
       sessions_close_fail: Could not close sessions. Check the connection first.
       limits_label: Resource limits
       max_active_sessions_label: Max active sessions

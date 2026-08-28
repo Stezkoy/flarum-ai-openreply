@@ -76,6 +76,14 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
         ),
         Button.component(
           {
+            className: 'Button',
+            loading: this.loadingCount,
+            onclick: () => this.checkSessionCount(),
+          },
+          app.translator.trans(PREFIX + '.admin.settings.session_count_label')
+        ),
+        Button.component(
+          {
             className: 'Button Button--danger',
             loading: this.loadingCloseAll,
             onclick: () => this.closeAll(),
@@ -283,16 +291,38 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
       method: 'POST',
       errorHandler: () => {},
     })
-      .then((data) => {
-        this.statusMessage = app.translator.trans(PREFIX + '.admin.settings.sessions_closed', {
-          total: data.total ?? 0,
-        });
+      .then(() => {
+        this.statusMessage = app.translator.trans(PREFIX + '.admin.settings.sessions_closed');
       })
       .catch(() => {
         this.statusMessage = app.translator.trans(PREFIX + '.admin.settings.sessions_close_fail');
       })
       .then(() => {
         this.loadingCloseAll = false;
+        m.redraw();
+      });
+  }
+
+  checkSessionCount() {
+    this.loadingCount = true;
+    m.redraw();
+
+    app.request({
+      url: app.forum.attribute('apiUrl') + '/ai-openreply/count',
+      method: 'POST',
+      errorHandler: () => {},
+    })
+      .then((data) => {
+        this.statusMessage = app.translator.trans(PREFIX + '.admin.settings.session_count_result', {
+          total: data.total ?? 0,
+          extension: data.extension ?? 0,
+        });
+      })
+      .catch(() => {
+        this.statusMessage = app.translator.trans(PREFIX + '.admin.settings.session_count_fail');
+      })
+      .then(() => {
+        this.loadingCount = false;
         m.redraw();
       });
   }

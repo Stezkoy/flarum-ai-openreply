@@ -17,6 +17,7 @@ use Flarum\Post\Event\Posted;
 use Stezkoy\FlarumAIOpenReply\Access\DiscussionPolicy;
 use Stezkoy\FlarumAIOpenReply\Api\Controller\CloseAllSessionsController;
 use Stezkoy\FlarumAIOpenReply\Api\Controller\HealthController;
+use Stezkoy\FlarumAIOpenReply\Api\Controller\SessionCountController;
 use Stezkoy\FlarumAIOpenReply\Listeners\ReplyOnPost;
 
 return [
@@ -43,7 +44,8 @@ return [
 
     new Extend\Routes('api')
         ->post('/ai-openreply/health', 'ai-openreply.health', HealthController::class)
-        ->post('/ai-openreply/close-all', 'ai-openreply.close-all', CloseAllSessionsController::class),
+        ->post('/ai-openreply/close-all', 'ai-openreply.close-all', CloseAllSessionsController::class)
+        ->post('/ai-openreply/count', 'ai-openreply.count', SessionCountController::class),
 
     new Extend\Event()
         ->listen(Posted::class, ReplyOnPost::class),
