@@ -35,5 +35,6 @@ stezkoy-ai-openreply:
       session_ttl_days_help: Сессии, неактивные дольше этого числа дней, закрываются для освобождения памяти. 0 — без TTL.
       enabled_tags_label: Теги
       enabled_tags_help: Выберите теги, в которых ассистент будет генерировать ответы.
+      enabled_tags_empty: Расширение flarum-tags должно быть включено, чтобы выбирать теги.
     permissions:
       use_ai_assistant_label: Использовать AI-ассистента

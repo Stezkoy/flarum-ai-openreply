@@ -1,0 +1,36 @@
+.AIOpenReplySettings {
+  .Form-group {
+    select.FormControl {
+      max-width: 100%;
+    }
+  }
+
+  .AIOpenReplyTagList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .AIOpenReplyTag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid @control-bg;
+    background: @control-bg;
+    border-radius: @border-radius;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-size: 13px;
+    user-select: none;
+
+    input[type='checkbox'] {
+      margin: 0;
+    }
+
+    &.selected {
+      background: @primary-color;
+      border-color: @primary-color;
+      color: #fff;
+    }
+  }
+}

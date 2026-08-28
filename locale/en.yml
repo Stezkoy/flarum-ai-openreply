@@ -35,5 +35,6 @@ stezkoy-ai-openreply:
       session_ttl_days_help: Sessions idle for longer than this many days are closed to free memory. Set to 0 to disable the TTL.
       enabled_tags_label: Tags
       enabled_tags_help: Select in which tags the assistant will generate responses.
+      enabled_tags_empty: The flarum-tags extension must be enabled to choose tags.
     permissions:
       use_ai_assistant_label: Use AI assistant

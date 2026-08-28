@@ -147,39 +147,56 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
   }
 
   _tagsGroup() {
+    const selectedIds = this._selectedTagIds();
+    const allTags = app.store.all('tags');
+
+    return m('.Form-group', [
+      m('label', app.translator.trans(PREFIX + '.admin.settings.enabled_tags_label')),
+      m('.AIOpenReplyTagList', [
+        allTags.length === 0
+          ? m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.enabled_tags_empty'))
+          : allTags.map((tag) => {
+              const id = String(tag.id());
+              const checked = selectedIds.includes(id);
+              return m(
+                'label.AIOpenReplyTag',
+                {
+                  className: checked ? 'selected' : '',
+                },
+                [
+                  m('input[type=checkbox]', {
+                    checked,
+                    onchange: () => this._toggleTag(id),
+                  }),
+                  m('span', tag.name()),
+                ]
+              );
+            }),
+      ]),
+      m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.enabled_tags_help')),
+    ]);
+  }
+
+  _toggleTag(id) {
+    const selected = this._selectedTagIds();
+    const index = selected.indexOf(id);
+    if (index === -1) {
+      selected.push(id);
+    } else {
+      selected.splice(index, 1);
+    }
+    this.setting(PREFIX + '.enabled-tags')(JSON.stringify(selected));
+    m.redraw();
+  }
+
+  _selectedTagIds() {
     let selected = [];
     try {
       selected = JSON.parse(this.setting(PREFIX + '.enabled-tags', '[]')() || '[]');
     } catch (e) {
       selected = [];
     }
-
-    const allTags = app.store.all('tags');
-
-    return m('.Form-group', [
-      m('label', app.translator.trans(PREFIX + '.admin.settings.enabled_tags_label')),
-      m(
-        'select.FormControl',
-        {
-          multiple: true,
-          onchange: (e) => {
-            const selectedTags = Array.from(e.target.selectedOptions, (opt) => opt.value);
-            this.setting(PREFIX + '.enabled-tags')(JSON.stringify(selectedTags));
-          },
-        },
-        allTags.map((tag) =>
-          m(
-            'option',
-            {
-              value: String(tag.id()),
-              selected: selected.includes(String(tag.id())),
-            },
-            tag.name()
-          )
-        )
-      ),
-      m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.enabled_tags_help')),
-    ]);
+    return selected.map(String);
   }
 
   _default(setting) {
