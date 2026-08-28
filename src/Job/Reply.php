@@ -61,6 +61,14 @@ class Reply extends AbstractJob
             $post->content = $content;
 
             $post->save();
+
+            $replyOnDiscussionStart = $settings->get('stezkoy-ai-openreply.enable_on_discussion_started', true);
+
+            if ($replyOnDiscussionStart)
+            {
+                $client->deleteSession($session->session_id);
+                $session->delete();
+            }
         } catch (\Throwable $e) {
             $logger->error('[AI Open-Reply] Error while generating reply: ' . $e->getMessage());
         }

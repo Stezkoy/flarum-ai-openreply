@@ -75,6 +75,16 @@ class OpencodeClient
         return $payload['id'] ?? null;
     }
 
+    public function deleteSession(string $sessionId): bool
+    {
+        if ($this->client === null)
+            return false;
+
+        $this->requestJson('DELETE', '/session/'.rawurlencode($sessionId), []);
+
+        return true;
+    }
+
     public function reply(string $sessionId, string $text): ?string
     {
         if ($this->client === null)
