@@ -14,7 +14,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "flarum/core": "^2.0.0-rc.1",
+        "flarum/core": "^2.0",
         "guzzlehttp/guzzle": "^7.10"
     },
     "authors": [
