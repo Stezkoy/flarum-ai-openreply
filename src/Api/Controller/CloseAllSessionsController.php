@@ -21,6 +21,8 @@ class CloseAllSessionsController implements RequestHandlerInterface
     {
         RequestUtil::getActor($request)->assertAdmin();
 
+        $total = $this->client->sessionCount();
+
         $closed = 0;
 
         foreach (OpencodeSession::query()->get() as $session) {
@@ -31,6 +33,7 @@ class CloseAllSessionsController implements RequestHandlerInterface
 
         return new JsonResponse([
             'closed' => $closed,
+            'total' => $total,
         ]);
     }
 }

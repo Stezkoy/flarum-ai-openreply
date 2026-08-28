@@ -29,7 +29,7 @@ stezkoy-ai-openreply:
       connection_success_default_model: "Подключение успешно. Модель не задана — будет использоваться модель сервера по умолчанию {model}."
       connection_success_no_model: Подключение успешно. Модель не задана — будет использоваться модель по умолчанию.
       connection_fail: Не удалось подключиться. Убедитесь, что сервер запущен и данные для входа верны.
-      sessions_closed: "Закрыто сессий: {count}."
+      sessions_closed: "Сессии удалены. Всего сессий на сервере: {total}."
       sessions_close_fail: Не удалось закрыть сессии. Сначала проверьте подключение.
       limits_label: Лимиты ресурсов
       max_active_sessions_label: Макс. число активных сессий

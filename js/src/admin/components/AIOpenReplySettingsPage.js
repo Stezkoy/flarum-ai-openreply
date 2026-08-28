@@ -285,7 +285,7 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
     })
       .then((data) => {
         this.statusMessage = app.translator.trans(PREFIX + '.admin.settings.sessions_closed', {
-          count: data.closed,
+          total: data.total ?? 0,
         });
       })
       .catch(() => {

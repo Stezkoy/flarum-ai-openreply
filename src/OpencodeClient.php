@@ -96,6 +96,21 @@ class OpencodeClient
         return $this->requestJson('GET', '/provider', []);
     }
 
+    /**
+     * Returns the total number of sessions currently on the opencode server
+     * (all of them, including ones not created by this extension), or null
+     * when the server is unreachable.
+     */
+    public function sessionCount(): ?int
+    {
+        if ($this->client === null)
+            return null;
+
+        $payload = $this->requestJson('GET', '/session', []);
+
+        return is_array($payload) ? count($payload) : null;
+    }
+
     public function deleteSession(string $sessionId): bool
     {
         if ($this->client === null)
