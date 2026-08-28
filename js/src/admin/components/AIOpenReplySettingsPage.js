@@ -102,20 +102,38 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
   }
 
   _modelGroup() {
+    const current = this.setting(PREFIX + '.model')() || '';
+    const isPreset = FREE_MODEL_IDS.includes(current);
+    const isDefault = current === '';
+
+    const selectValue = isPreset ? current : '__custom__';
+
     return m('.Form-group', [
       m('label', app.translator.trans(PREFIX + '.admin.settings.model_label')),
       m(
         'select.FormControl',
         {
-          value: this.setting(PREFIX + '.model', '')(),
-          onchange: (e) => this.setting(PREFIX + '.model')(e.target.value),
+          value: selectValue,
+          onchange: (e) => {
+            this.setting(PREFIX + '.model')(e.target.value);
+            m.redraw();
+          },
         },
         [
           m('option', { value: '' }, app.translator.trans(PREFIX + '.admin.settings.model_default_option')),
           ...FREE_MODEL_IDS.map((id) => m('option', { value: id }, FREE_MODEL_LABELS[id])),
+          m('option', { value: '__custom__' }, app.translator.trans(PREFIX + '.admin.settings.model_custom_option')),
         ]
       ),
-      m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.model_help')),
+      isPreset || isDefault
+        ? m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.model_help'))
+        : m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.model_custom_help')),
+      m('input.FormControl.AIOpenReplyCustomModel', {
+        type: 'text',
+        placeholder: 'provider/model',
+        style: selectValue === '__custom__' ? '' : 'display: none;',
+        bidi: this.setting(PREFIX + '.model', ''),
+      }),
     ]);
   }
 
@@ -159,17 +177,13 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
               const id = String(tag.id());
               const checked = selectedIds.includes(id);
               return m(
-                'label.AIOpenReplyTag',
+                'button.AIOpenReplyTag',
                 {
+                  type: 'button',
                   className: checked ? 'selected' : '',
+                  onclick: () => this._toggleTag(id),
                 },
-                [
-                  m('input[type=checkbox]', {
-                    checked,
-                    onchange: () => this._toggleTag(id),
-                  }),
-                  m('span', tag.name()),
-                ]
+                tag.name()
               );
             }),
       ]),
@@ -228,11 +242,7 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
       errorHandler: () => {},
     })
       .then((data) => {
-        this.statusMessage = app.translator.trans(
-          data.healthy
-            ? PREFIX + '.admin.settings.connection_success'
-            : PREFIX + '.admin.settings.connection_fail'
-        );
+        this.statusMessage = this._connectionMessage(data);
       })
       .catch(() => {
         this.statusMessage = app.translator.trans(PREFIX + '.admin.settings.connection_fail');
@@ -241,6 +251,37 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
         this.loadingHealth = false;
         m.redraw();
       });
+  }
+
+  _connectionMessage(data) {
+    if (!data.healthy) {
+      return app.translator.trans(PREFIX + '.admin.settings.connection_fail');
+    }
+
+    const model = (data.model || '').trim();
+
+    if (model !== '') {
+      const provider = model.split('/')[0] || '';
+      let msg = app.translator.trans(PREFIX + '.admin.settings.connection_success_with_model', { model });
+
+      if (provider !== '' && Array.isArray(data.connectedProviders)) {
+        if (data.connectedProviders.includes(provider)) {
+          msg += app.translator.trans(PREFIX + '.admin.settings.connection_success_provider_connected', { provider });
+        } else {
+          msg += app.translator.trans(PREFIX + '.admin.settings.connection_success_provider_disconnected', { provider });
+        }
+      }
+
+      return msg;
+    }
+
+    if (data.serverDefaultModel && data.serverDefaultModel.model) {
+      return app.translator.trans(PREFIX + '.admin.settings.connection_success_default_model', {
+        model: data.serverDefaultModel.provider + '/' + data.serverDefaultModel.model,
+      });
+    }
+
+    return app.translator.trans(PREFIX + '.admin.settings.connection_success_no_model');
   }
 
   closeAll() {

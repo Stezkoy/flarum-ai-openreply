@@ -12,6 +12,8 @@ stezkoy-ai-openreply:
       model_label: Модель
       model_help: "Необязательно: какая модель будет отвечать. Оставьте <em>«— по умолчанию —»</em>, чтобы использовать модель, настроенную для агента. Применяется при первом создании сессии обсуждения."
       model_default_option: "— по умолчанию —"
+      model_custom_option: Укажу сам
+      model_custom_help: "Укажите модель в формате <code>провайдер/модель</code> (например <code>opencode/big-pickle</code>)."
       user_prompt_label: Пользователь-ассистент
       user_prompt_help: Укажите ID пользователя, от имени которого будут создаваться ответы.
       user_prompt_badge_label: Бейдж пользователя-ассистента
@@ -23,6 +25,11 @@ stezkoy-ai-openreply:
       check_connection_label: Проверить подключение
       close_all_sessions_label: Закрыть все сессии
       connection_success: Подключение успешно. Сервер opencode доступен.
+      connection_success_with_model: "Подключение успешно. Модель: <strong>{model}</strong>."
+      connection_success_provider_connected: " Провайдер ({provider}) подключён."
+      connection_success_provider_disconnected: " Провайдер ({provider}) не подключён — модель будет недоступна при запросах."
+      connection_success_default_model: "Подключение успешно. Модель не задана — будет использоваться модель сервера по умолчанию <strong>{model}</strong>."
+      connection_success_no_model: Подключение успешно. Модель не задана — будет использоваться модель по умолчанию.
       connection_fail: Не удалось подключиться. Убедитесь, что сервер запущен и данные для входа верны.
       sessions_closed: "Закрыто сессий: {count}."
       sessions_close_fail: Не удалось закрыть сессии. Сначала проверьте подключение.

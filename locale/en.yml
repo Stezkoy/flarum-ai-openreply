@@ -12,6 +12,8 @@ stezkoy-ai-openreply:
       model_label: Model
       model_help: "Optional: which model answers. Leave on <em>— default —</em> to use the model configured for the agent. Only applied when a discussion session is first created."
       model_default_option: "— default —"
+      model_custom_option: Set my own
+      model_custom_help: "Enter your model as <code>provider/model</code> (e.g. <code>opencode/big-pickle</code>)."
       user_prompt_label: User assistant
       user_prompt_help: Enter the user id that will be used to generate AI responses.
       user_prompt_badge_label: User assistant badge
@@ -23,6 +25,11 @@ stezkoy-ai-openreply:
       check_connection_label: Check connection
       close_all_sessions_label: Close all sessions
       connection_success: Connection successful. The opencode server is reachable.
+      connection_success_with_model: "Connection successful. Model: <strong>{model}</strong>."
+      connection_success_provider_connected: " Provider ({provider}) is connected."
+      connection_success_provider_disconnected: " Provider ({provider}) is not connected — it will be unavailable when making requests."
+      connection_success_default_model: "Connection successful. Model not set — the server default <strong>{model}</strong> will be used."
+      connection_success_no_model: "Connection successful. No model set — the server default will be used."
       connection_fail: Connection failed. Make sure the server is running and credentials are correct.
       sessions_closed: "{count, plural, one {# session closed} other {# sessions closed}}."
       sessions_close_fail: Could not close sessions. Check the connection first.

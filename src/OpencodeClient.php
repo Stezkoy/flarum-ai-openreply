@@ -86,6 +86,25 @@ class OpencodeClient
         return is_array($payload) && !empty($payload['healthy']);
     }
 
+    public function configuredModel(): string
+    {
+        return (string)$this->settings->get('stezkoy-ai-openreply.model', '');
+    }
+
+    /**
+     * Returns the `GET /provider` payload (connected providers + default models),
+     * or null when the server is unreachable.
+     *
+     * @return array{all?: array, default?: array, connected?: array}|null
+     */
+    public function providers(): ?array
+    {
+        if ($this->client === null)
+            return null;
+
+        return $this->requestJson('GET', '/provider', []);
+    }
+
     public function deleteSession(string $sessionId): bool
     {
         if ($this->client === null)

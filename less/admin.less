@@ -1,8 +1,21 @@
 .AIOpenReplySettings {
   .Form-group {
-    select.FormControl {
-      max-width: 100%;
+    + .Form-group {
+      margin-top: 14px;
     }
+
+    select.FormControl {
+      max-width: 400px;
+    }
+  }
+
+  .AIOpenReplyCustomModel {
+    margin-top: 8px;
+    max-width: 400px;
+  }
+
+  .helpText {
+    margin-top: 4px;
   }
 
   .AIOpenReplyTagList {
@@ -12,22 +25,19 @@
   }
 
   .AIOpenReplyTag {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+    display: inline-block;
     border: 1px solid var(--control-bg);
     background: var(--control-bg);
     border-radius: var(--border-radius);
-    padding: 4px 10px;
+    padding: 5px 12px;
     cursor: pointer;
     font-size: 13px;
-    user-select: none;
+    line-height: 1.2;
+    color: var(--text-color);
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 
-    input[type='checkbox'] {
-      margin: 0;
-    }
-
-    &.selected {
+    &.selected,
+    &:hover {
       background: var(--primary-color);
       border-color: var(--primary-color);
       color: #fff;

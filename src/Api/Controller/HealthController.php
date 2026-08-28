@@ -22,8 +22,32 @@ class HealthController implements RequestHandlerInterface
 
         $healthy = $this->client->health();
 
-        return new JsonResponse([
+        $result = [
             'healthy' => $healthy,
-        ]);
+            'model' => $this->client->configuredModel(),
+        ];
+
+        if ($healthy) {
+            $providers = $this->client->providers();
+
+            if (is_array($providers)) {
+                $result['connectedProviders'] = $providers['connected'] ?? [];
+                $result['serverDefault'] = $providers['default'] ?? [];
+                $result['serverDefaultModel'] = $this->resolveServerDefault($providers['default'] ?? []);
+            }
+        }
+
+        return new JsonResponse($result);
+    }
+
+    private function resolveServerDefault(array $default): ?array
+    {
+        foreach ($default as $provider => $modelID) {
+            if (is_string($modelID) && is_string($provider) && $modelID !== '') {
+                return ['provider' => $provider, 'model' => $modelID];
+            }
+        }
+
+        return null;
     }
 }
