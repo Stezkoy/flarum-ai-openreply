@@ -12,7 +12,6 @@
         "dev": "webpack --mode development --watch",
         "build": "webpack --mode production"
     },
-    "prettier": "@flarum/prettier-config",
     "name": "@stezkoy/flarum-ai-openreply",
     "version": "0.0.0"
 }
