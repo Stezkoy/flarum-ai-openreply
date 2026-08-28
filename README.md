@@ -130,7 +130,31 @@ sudo systemctl status opencode
 
 > The `User=opencode` account stores its own provider credentials and session data. Add `Environment=OPENCODE_SERVER_USERNAME=...` if you changed the basic auth username.
 
-## Configuration
+## Server recommendations
+
+opencode is a local LLM agent runtime: it loads the model, keeps the full conversation (and often the context window) in memory, and may spawn long-running background tasks. The headless server used by this extension is no exception, so plan its resources accordingly.
+
+### Performance and stability
+
+- **Run it next to Flarum on a dedicated machine (or container)**, not on the same process as PHP. Reply generation can be slow (tens of seconds to minutes), so isolate it from the web stack and give it its own CPU/memory budget and network.
+- **Ensure the extension can reach the server.** The extension uses a 600-second request timeout (`OpencodeClient`), so slow generations are fine, but the connection timeout is 5 seconds — the server must respond quickly at the TCP level. Keep them on the same LAN / low-latency network to avoid spurious failures.
+- **Watch memory.** Each discussion keeps its own persistent session; long conversations and large context windows accumulate in RAM. Set a safe limit on the number of active discussions or restart the service periodically (`Restart=always` above) to reclaim memory.
+- **Use a fast network and a stable provider** for the upstream LLM. generation latency and provider rate limits dominate response time.
+- **Apply an access token / basic auth** so the server is not left open (see authentication section above).
+
+### Minimum / recommended hardware
+
+These are rough guidelines for a CPU-only setup running a headless server that serves a small-to-medium forum. Rent a dedicated VM or container rather than sharing a tiny VPS with heavy applications.
+
+| Model size (approx.)              | RAM          | vCPU | Notes                                     |
+|-----------------------------------|--------------|------|-------------------------------------------|
+| Small (cloud / hosted APIs)       | 2–4 GB       | 1–2  | Model runs on the provider, little local load |
+| Local 7–8B quantized model        | 16 GB        | 4    | Comfortable for multi-session use         |
+| Large 70B+ / many concurrent      | 64 GB+       | 8+   | Heavy; prefer hosted APIs instead         |
+
+If you are using hosted APIs (recommended for most forums), opencode itself only needs modest resources — the table's first row. Save the bigger rows for running local models.
+
+
 
 In the extension's admin settings page:
 
