@@ -12,7 +12,7 @@ A fork of `michaelbelgium/flarum-ai-autoreply`, reworked to work exclusively wit
 
 ## Requirements
 
-- **Flarum >= 2.0** and **PHP 8.4**
+- **Flarum >= 2.0** and **PHP 8.3**
 - A running [opencode server](https://opencode.ai/docs/server/) instance reachable from the Flarum host
 
 ## Installation
