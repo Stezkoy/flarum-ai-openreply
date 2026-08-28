@@ -26,8 +26,6 @@ stezkoy-ai-openreply:
       close_all_sessions_label: Close all sessions
       connection_success: Connection successful. The opencode server is reachable.
       connection_success_with_model: "Connection successful. Model: {model}."
-      connection_success_provider_connected: " Provider ({provider}) is connected."
-      connection_success_provider_disconnected: " Provider ({provider}) is not connected — it will be unavailable when making requests."
       connection_success_default_model: "Connection successful. No model set — the server default {model} will be used."
       connection_success_no_model: "Connection successful. No model set — the server default will be used."
       connection_fail: Connection failed. Make sure the server is running and credentials are correct.

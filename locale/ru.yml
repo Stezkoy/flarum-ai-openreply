@@ -26,8 +26,6 @@ stezkoy-ai-openreply:
       close_all_sessions_label: Закрыть все сессии
       connection_success: Подключение успешно. Сервер opencode доступен.
       connection_success_with_model: "Подключение успешно. Модель: {model}."
-      connection_success_provider_connected: " Провайдер ({provider}) подключён."
-      connection_success_provider_disconnected: " Провайдер ({provider}) не подключён — модель будет недоступна при запросах."
       connection_success_default_model: "Подключение успешно. Модель не задана — будет использоваться модель сервера по умолчанию {model}."
       connection_success_no_model: Подключение успешно. Модель не задана — будет использоваться модель по умолчанию.
       connection_fail: Не удалось подключиться. Убедитесь, что сервер запущен и данные для входа верны.

@@ -264,18 +264,7 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
     const model = (data.model || '').trim();
 
     if (model !== '') {
-      const provider = model.split('/')[0] || '';
-      let msg = app.translator.trans(PREFIX + '.admin.settings.connection_success_with_model', { model });
-
-      if (provider !== '' && Array.isArray(data.connectedProviders)) {
-        if (data.connectedProviders.includes(provider)) {
-          msg += app.translator.trans(PREFIX + '.admin.settings.connection_success_provider_connected', { provider });
-        } else {
-          msg += app.translator.trans(PREFIX + '.admin.settings.connection_success_provider_disconnected', { provider });
-        }
-      }
-
-      return msg;
+      return app.translator.trans(PREFIX + '.admin.settings.connection_success_with_model', { model });
     }
 
     if (data.serverDefaultModel && data.serverDefaultModel.model) {
