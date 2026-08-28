@@ -40,9 +40,10 @@ class OpencodeClient
         ];
 
         $password = $this->settings->get('stezkoy-ai-openreply.opencode_password');
+        $username = $this->settings->get('stezkoy-ai-openreply.opencode_username', 'opencode') ?: 'opencode';
 
         if (!empty($password)) {
-            $options[RequestOptions::AUTH] = ['opencode', $password];
+            $options[RequestOptions::AUTH] = [$username, $password];
         }
 
         $this->url = rtrim($url, '/');
@@ -73,6 +74,16 @@ class OpencodeClient
         $payload = $this->requestJson('POST', '/session', $body);
 
         return $payload['id'] ?? null;
+    }
+
+    public function health(): bool
+    {
+        if ($this->client === null)
+            return false;
+
+        $payload = $this->requestJson('GET', '/global/health', []);
+
+        return is_array($payload) && !empty($payload['healthy']);
     }
 
     public function deleteSession(string $sessionId): bool

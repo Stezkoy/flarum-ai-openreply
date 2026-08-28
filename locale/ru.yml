@@ -3,8 +3,10 @@ stezkoy-ai-openreply:
     settings:
       opencode_url_label: URL opencode-сервера
       opencode_url_help: "Адрес вашего headless-сервера opencode. Запустите его командой <code>opencode serve</code> (порт по умолчанию 4096)."
+      opencode_username_label: Логин opencode-сервера
+      opencode_username_help: "Логин для basic-аутентификации. По умолчанию <code>opencode</code>, если оставить пустым."
       opencode_password_label: Пароль opencode-сервера
-      opencode_password_help: "Необязательно. Значение <code>OPENCODE_SERVER_PASSWORD</code>, если вы запустили сервер с basic-аутентификацией (имя пользователя — <code>opencode</code>)."
+      opencode_password_help: "Необязательно. Значение <code>OPENCODE_SERVER_PASSWORD</code>, если вы запустили сервер с basic-аутентификацией."
       opencode_agent_label: Агент
       opencode_agent_help: "Необязательно: агент opencode (персона ассистента), который будет использоваться. Оставьте пустым, чтобы использовать агента по умолчанию. Продвинутые пользователи могут задать своих агентов в <code>opencode.json</code> (ключ <code>agent.prompt</code> — здесь живут инструкции для ассистента). Применяется при первом создании сессии обсуждения."
       model_label: Модель
@@ -16,6 +18,15 @@ stezkoy-ai-openreply:
       user_prompt_badge_help: Текст, отображаемый под пользователем-ассистентом.
       enable_on_discussion_started_label: Отвечать при создании обсуждения
       enable_on_discussion_started_help: Если включено, ассистент отвечает только на первый пост обсуждения. Если выключено, обсуждение превращается в чат между автором и ассистентом — ассистент отвечает на каждое сообщение автора.
+      actions_label: Действия
+      actions_help: "Проверьте подключение к серверу opencode или закройте все активные сессии для освобождения памяти."
+      check_connection_label: Проверить подключение
+      close_all_sessions_label: Закрыть все сессии
+      connection_success: Подключение успешно. Сервер opencode доступен.
+      connection_fail: Не удалось подключиться. Убедитесь, что сервер запущен и данные для входа верны.
+      sessions_closed: "Закрыто сессий: {count}."
+      sessions_close_fail: Не удалось закрыть сессии. Сначала проверьте подключение.
+      limits_label: Лимиты ресурсов
       max_active_sessions_label: Макс. число активных сессий
       max_active_sessions_help: Максимальное число сессий opencode, удерживаемых в памяти одновременно. Сначала закрываются самые старые. 0 — без ограничения.
       max_messages_per_session_label: Макс. сообщений на сессию

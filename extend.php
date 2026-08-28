@@ -15,6 +15,8 @@ use Flarum\Discussion\Discussion;
 use Flarum\Extend;
 use Flarum\Post\Event\Posted;
 use Stezkoy\FlarumAIOpenReply\Access\DiscussionPolicy;
+use Stezkoy\FlarumAIOpenReply\Api\Controller\CloseAllSessionsController;
+use Stezkoy\FlarumAIOpenReply\Api\Controller\HealthController;
 use Stezkoy\FlarumAIOpenReply\Listeners\ReplyOnPost;
 
 return [
@@ -30,6 +32,7 @@ return [
 
     new Extend\Settings()
         ->default('stezkoy-ai-openreply.opencode_url', 'http://localhost:4096')
+        ->default('stezkoy-ai-openreply.opencode_username', 'opencode')
         ->default('stezkoy-ai-openreply.enable_on_discussion_started', true)
         ->default('stezkoy-ai-openreply.user_prompt_badge_text', 'Assistant')
         ->default('stezkoy-ai-openreply.max_active_sessions', 10)
@@ -37,6 +40,10 @@ return [
         ->default('stezkoy-ai-openreply.session_ttl_days', 3)
         ->serializeToForum('aiAssistantUserId', 'stezkoy-ai-openreply.user_prompt')
         ->serializeToForum('aiAssistantBadgeText', 'stezkoy-ai-openreply.user_prompt_badge_text'),
+
+    new Extend\Routes('api')
+        ->post('/ai-openreply/health', 'ai-openreply.health', HealthController::class)
+        ->post('/ai-openreply/close-all', 'ai-openreply.close-all', CloseAllSessionsController::class),
 
     new Extend\Event()
         ->listen(Posted::class, ReplyOnPost::class),

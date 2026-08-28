@@ -3,8 +3,10 @@ stezkoy-ai-openreply:
     settings:
       opencode_url_label: opencode server URL
       opencode_url_help: "Address of your headless opencode server. Start it with <code>opencode serve</code> (default port 4096)."
+      opencode_username_label: opencode server username
+      opencode_username_help: "Username for basic auth. Defaults to <code>opencode</code> if left empty."
       opencode_password_label: opencode server password
-      opencode_password_help: "Optional. The value of <code>OPENCODE_SERVER_PASSWORD</code> if you started the server with basic auth enabled (username is <code>opencode</code>)."
+      opencode_password_help: "Optional. The value of <code>OPENCODE_SERVER_PASSWORD</code> if you started the server with basic auth enabled."
       opencode_agent_label: Agent
       opencode_agent_help: "Optional: the opencode agent (assistant persona) to use. Leave empty to use the default agent. Advanced users can define custom agents in <code>opencode.json</code> (key <code>agent.prompt</code> is where the assistant's instructions live). Only applied when a discussion session is first created."
       model_label: Model
@@ -16,6 +18,15 @@ stezkoy-ai-openreply:
       user_prompt_badge_help: Text that will be displayed below the assistant user.
       enable_on_discussion_started_label: Enable on discussion start
       enable_on_discussion_started_help: When enabled, AI replies only at discussion start. When disabled, the discussion becomes a chat between the OP and the assistant; the assistant replies to every OP post.
+      actions_label: Actions
+      actions_help: "Check the connection to the opencode server, or close all active sessions to free memory."
+      check_connection_label: Check connection
+      close_all_sessions_label: Close all sessions
+      connection_success: Connection successful. The opencode server is reachable.
+      connection_fail: Connection failed. Make sure the server is running and credentials are correct.
+      sessions_closed: "{count, plural, one {# session closed} other {# sessions closed}}."
+      sessions_close_fail: Could not close sessions. Check the connection first.
+      limits_label: Resource limits
       max_active_sessions_label: Max active sessions
       max_active_sessions_help: Maximum number of opencode sessions kept in memory simultaneously. Oldest sessions are closed first. Set to 0 to disable the limit.
       max_messages_per_session_label: Max messages per session
