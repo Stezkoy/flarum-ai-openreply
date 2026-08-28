@@ -21,9 +21,6 @@ class OpencodeClient
 {
     protected ?Client $client = null;
     protected string $url = '';
-    protected bool $payloadFormatDetected = false;
-    protected bool $usePartsPayload = false;
-    protected bool $lastErrorIsPartsMismatch = false;
 
     public function __construct(
         protected SettingsRepositoryInterface $settings,
@@ -85,26 +82,13 @@ class OpencodeClient
 
         $path = '/session/'.rawurlencode($sessionId).'/message';
 
-        $payload = $this->requestJson('POST', $path, $this->payloadFormatDetected
-            ? $this->payload($text)
-            : ['text' => $text]);
-
-        // Some 1.x builds still expose the classic body shape ({parts:[...]}),
-        // which is also what the current running server expects.
-        if ($payload === null && $this->lastErrorIsPartsMismatch) {
-            $this->usePartsPayload = true;
-            $this->payloadFormatDetected = true;
-            $payload = $this->requestJson('POST', $path, $this->payload($text));
-        }
+        $payload = $this->requestJson('POST', $path, [
+            'parts' => [
+                ['type' => 'text', 'text' => $text],
+            ],
+        ]);
 
         return $payload === null ? null : $this->extractText($payload);
-    }
-
-    private function payload(string $text): array
-    {
-        return $this->usePartsPayload
-            ? ['parts' => [['type' => 'text', 'text' => $text]]]
-            : ['text' => $text];
     }
 
     private function parseModel(?string $model): ?array
@@ -135,8 +119,6 @@ class OpencodeClient
 
             if ($status >= 400) {
                 $errorBody = (string)$response->getBody();
-                $this->lastErrorIsPartsMismatch = $status === 400
-                    && str_contains($errorBody, 'parts');
                 $this->logger->error("[AI Open-Reply] opencode {$method} {$path} failed ({$status}): ".$errorBody);
                 return null;
             }
