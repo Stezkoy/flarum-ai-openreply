@@ -4,8 +4,17 @@ import Button from 'flarum/common/components/Button';
 
 const PREFIX = 'stezkoy-ai-openreply';
 
-const FREE_MODELS = {
-  '': app.translator.trans(PREFIX + '.admin.settings.model_default_option'),
+const FREE_MODEL_IDS = [
+  'opencode/big-pickle',
+  'opencode/mimo-v2.5-free',
+  'opencode/hy3-free',
+  'opencode/ling-3.0-flash-fin-free',
+  'opencode/nemotron-3-ultra-free',
+  'opencode/nemotron-3.5-lightning-free',
+  'opencode/muse-spark-1.2-contributor-free',
+];
+
+const FREE_MODEL_LABELS = {
   'opencode/big-pickle': 'Big Pickle',
   'opencode/mimo-v2.5-free': 'MiMo-V2.5 Free',
   'opencode/hy3-free': 'Hy3 Free',
@@ -101,7 +110,10 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
           value: this.setting(PREFIX + '.model', '')(),
           onchange: (e) => this.setting(PREFIX + '.model')(e.target.value),
         },
-        Object.entries(FREE_MODELS).map(([value, label]) => m('option', { value }, label))
+        [
+          m('option', { value: '' }, app.translator.trans(PREFIX + '.admin.settings.model_default_option')),
+          ...FREE_MODEL_IDS.map((id) => m('option', { value: id }, FREE_MODEL_LABELS[id])),
+        ]
       ),
       m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.model_help')),
     ]);
