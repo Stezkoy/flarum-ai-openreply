@@ -79,7 +79,6 @@ class Reply extends AbstractJob
                 $sessionId = $client->createSession(
                     $this->discussionTitle,
                     $settings->get('stezkoy-ai-openreply.opencode_agent') ?: null,
-                    $settings->get('stezkoy-ai-openreply.model') ?: null,
                 );
 
                 if (empty($sessionId))

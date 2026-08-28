@@ -50,26 +50,17 @@ class OpencodeClient
         $this->client = new Client($options);
     }
 
-    public function createSession(string $title, ?string $agent = null, ?string $model = null): ?string
+    public function createSession(string $title, ?string $agent = null): ?string
     {
         if ($this->client === null)
             return null;
 
         $body = [
             'title' => $title,
-            // Deny every tool so the assistant only ever answers with text.
-            'permission' => [
-                ['permission' => '*', 'pattern' => '*', 'action' => 'deny'],
-            ],
         ];
 
         if (!empty($agent))
             $body['agent'] = $agent;
-
-        $parsedModel = $this->parseModel($model);
-
-        if ($parsedModel !== null)
-            $body['model'] = $parsedModel;
 
         $payload = $this->requestJson('POST', '/session', $body);
 
@@ -122,11 +113,22 @@ class OpencodeClient
 
         $path = '/session/'.rawurlencode($sessionId).'/message';
 
-        $payload = $this->requestJson('POST', $path, [
+        $body = [
             'parts' => [
                 ['type' => 'text', 'text' => $text],
             ],
-        ]);
+        ];
+
+        $agent = (string)$this->settings->get('stezkoy-ai-openreply.opencode_agent', '');
+        $model = $this->parseModel($this->configuredModel());
+
+        if ($agent !== '')
+            $body['agent'] = $agent;
+
+        if ($model !== null)
+            $body['model'] = $model;
+
+        $payload = $this->requestJson('POST', $path, $body);
 
         return $payload === null ? null : $this->extractText($payload);
     }
@@ -145,7 +147,7 @@ class OpencodeClient
             return null;
         }
 
-        return ['providerID' => $parts[0], 'id' => $parts[1]];
+        return ['providerID' => $parts[0], 'modelID' => $parts[1]];
     }
 
     private function requestJson(string $method, string $path, array $body): ?array
