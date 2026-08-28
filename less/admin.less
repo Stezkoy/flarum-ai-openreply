@@ -15,9 +15,9 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    border: 1px solid @control-bg-light;
-    background: @control-bg-light;
-    border-radius: @border-radius;
+    border: 1px solid var(--control-bg);
+    background: var(--control-bg);
+    border-radius: var(--border-radius);
     padding: 4px 10px;
     cursor: pointer;
     font-size: 13px;
@@ -28,8 +28,8 @@
     }
 
     &.selected {
-      background: @primary-color;
-      border-color: @primary-color;
+      background: var(--primary-color);
+      border-color: var(--primary-color);
       color: #fff;
     }
   }
