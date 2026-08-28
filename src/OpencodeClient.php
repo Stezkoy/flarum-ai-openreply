@@ -116,7 +116,9 @@ class OpencodeClient
         if ($this->client === null)
             return false;
 
-        $this->requestJson('DELETE', '/session/'.rawurlencode($sessionId), []);
+        // A 404 just means the session is already gone (e.g. it was closed by a
+        // TTL/limit or externally), which is normal and not worth logging as an error.
+        $this->requestJson('DELETE', '/session/'.rawurlencode($sessionId), [], true);
 
         return true;
     }
@@ -165,7 +167,7 @@ class OpencodeClient
         return ['providerID' => $parts[0], 'modelID' => $parts[1]];
     }
 
-    private function requestJson(string $method, string $path, array $body): ?array
+    private function requestJson(string $method, string $path, array $body, bool $soft = false): ?array
     {
         try {
             $response = $this->client->request($method, $this->url.$path, [
@@ -175,6 +177,10 @@ class OpencodeClient
             $status = $response->getStatusCode();
 
             if ($status >= 400) {
+                if ($soft && $status === 404) {
+                    return null;
+                }
+
                 $errorBody = (string)$response->getBody();
                 $this->logger->error("[AI Open-Reply] opencode {$method} {$path} failed ({$status}): ".$errorBody);
                 return null;
