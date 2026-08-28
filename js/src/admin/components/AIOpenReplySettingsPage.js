@@ -41,35 +41,13 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
           }),
           this._group('opencode_agent_label', 'opencode_agent_help', 'input', 'opencode_agent'),
           this._modelGroup(),
+          this._actionsGroup(),
           this._group('user_prompt_label', 'user_prompt_help', 'input', 'user_prompt', {
             type: 'number',
             required: true,
           }),
           this._group('user_prompt_badge_label', 'user_prompt_badge_help', 'input', 'user_prompt_badge_text'),
           this._switchGroup(),
-
-          m('.Form-group', [
-            m('label', app.translator.trans(PREFIX + '.admin.settings.actions_label')),
-            m('.ButtonGroup', [
-              Button.component(
-                {
-                  className: 'Button',
-                  loading: this.loadingHealth,
-                  onclick: () => this.checkConnection(),
-                },
-                app.translator.trans(PREFIX + '.admin.settings.check_connection_label')
-              ),
-              Button.component(
-                {
-                  className: 'Button Button--danger',
-                  loading: this.loadingCloseAll,
-                  onclick: () => this.closeAll(),
-                },
-                app.translator.trans(PREFIX + '.admin.settings.close_all_sessions_label')
-              ),
-            ]),
-            m('p.helpText', this.statusMessage || app.translator.trans(PREFIX + '.admin.settings.actions_help')),
-          ]),
 
           m('.Form-group', [
             m('label', app.translator.trans(PREFIX + '.admin.settings.limits_label')),
@@ -84,6 +62,31 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
         ]),
       ])
     );
+  }
+
+  _actionsGroup() {
+    return m('.Form-group', [
+      m('label', app.translator.trans(PREFIX + '.admin.settings.actions_label')),
+      m('.ButtonGroup', [
+        Button.component(
+          {
+            className: 'Button',
+            loading: this.loadingHealth,
+            onclick: () => this.checkConnection(),
+          },
+          app.translator.trans(PREFIX + '.admin.settings.check_connection_label')
+        ),
+        Button.component(
+          {
+            className: 'Button Button--danger',
+            loading: this.loadingCloseAll,
+            onclick: () => this.closeAll(),
+          },
+          app.translator.trans(PREFIX + '.admin.settings.close_all_sessions_label')
+        ),
+      ]),
+      m('p.helpText', this.statusMessage || app.translator.trans(PREFIX + '.admin.settings.actions_help')),
+    ]);
   }
 
   _group(labelKey, helpKey, inputType, setting, extra = {}) {
@@ -106,7 +109,7 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
     const isPreset = FREE_MODEL_IDS.includes(current);
     const isDefault = current === '';
 
-    const selectValue = isPreset ? current : '__custom__';
+    const selectValue = isPreset ? current : isDefault ? '' : '__custom__';
 
     return m('.Form-group', [
       m('label', app.translator.trans(PREFIX + '.admin.settings.model_label')),

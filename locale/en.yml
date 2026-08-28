@@ -7,10 +7,10 @@ stezkoy-ai-openreply:
       opencode_username_help: "Username for basic auth. Defaults to <code>opencode</code> if left empty."
       opencode_password_label: opencode server password
       opencode_password_help: "Optional. The value of <code>OPENCODE_SERVER_PASSWORD</code> if you started the server with basic auth enabled."
-      opencode_agent_label: Agent
-      opencode_agent_help: "Optional: the opencode agent (assistant persona) to use. Leave empty to use the default agent. Advanced users can define custom agents in <code>opencode.json</code> (key <code>agent.prompt</code> is where the assistant's instructions live). Only applied when a discussion session is first created."
+      opencode_agent_label: Agent (assistant behavior)
+      opencode_agent_help: "Optional: the assistant's <i>persona/behavior</i> — <i>how</i> it acts. Examples: build (default, writes an answer right away), polite, jokester, writes in Russian, short & to-the-point. The behavior is defined by the agent's prompt in <code>opencode.json</code> (key <code>agent.prompt</code>), e.g. \"You are a friendly moderator. Answer in Russian.\" Leave empty to use the default agent. This is independent of the model."
       model_label: Model
-      model_help: "Optional: which model answers. Leave on <em>— default —</em> to use the model configured for the agent. Only applied when a discussion session is first created."
+      model_help: "Optional: <i>which AI engine</i> answers — this is separate from the agent. Examples: opencode/big-pickle, opencode/mimo-v2.5-free. The agent fixes <i>how</i> it behaves (behavior), the model fixes <i>which</i> AI answers. Leave on <em>— default —</em> to use the model already configured for the agent on the server. Only applied when a discussion session is first created."
       model_default_option: "— default —"
       model_custom_option: Set my own
       model_custom_help: "Enter your model as <code>provider/model</code> (e.g. <code>opencode/big-pickle</code>)."
@@ -25,10 +25,10 @@ stezkoy-ai-openreply:
       check_connection_label: Check connection
       close_all_sessions_label: Close all sessions
       connection_success: Connection successful. The opencode server is reachable.
-      connection_success_with_model: "Connection successful. Model: <strong>{model}</strong>."
+      connection_success_with_model: "Connection successful. Model: {model}."
       connection_success_provider_connected: " Provider ({provider}) is connected."
       connection_success_provider_disconnected: " Provider ({provider}) is not connected — it will be unavailable when making requests."
-      connection_success_default_model: "Connection successful. Model not set — the server default <strong>{model}</strong> will be used."
+      connection_success_default_model: "Connection successful. No model set — the server default {model} will be used."
       connection_success_no_model: "Connection successful. No model set — the server default will be used."
       connection_fail: Connection failed. Make sure the server is running and credentials are correct.
       sessions_closed: "{count, plural, one {# session closed} other {# sessions closed}}."
