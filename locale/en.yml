@@ -29,7 +29,7 @@ stezkoy-ai-openreply:
       connection_success_default_model: "Connection successful. No model set — the server default {model} will be used."
       connection_success_no_model: "Connection successful. No model set — the server default will be used."
       connection_fail: Connection failed. Make sure the server is running and credentials are correct.
-      sessions_closed: "Session data deleted. Total sessions on the server: {total}."
+      sessions_closed: "Extension sessions deleted. Other server sessions were not affected. Total sessions on the server: {total}."
       sessions_close_fail: Could not close sessions. Check the connection first.
       limits_label: Resource limits
       max_active_sessions_label: Max active sessions
