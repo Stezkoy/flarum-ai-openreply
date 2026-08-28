@@ -1,0 +1,24 @@
+stezkoy-ai-openreply:
+  admin:
+    settings:
+      opencode_url_label: URL opencode-сервера
+      opencode_url_help: "Адрес вашего headless-сервера opencode. Запустите его командой <code>opencode serve</code> (порт по умолчанию 4096)."
+      opencode_password_label: Пароль opencode-сервера
+      opencode_password_help: "Необязательно. Значение <code>OPENCODE_SERVER_PASSWORD</code>, если вы запустили сервер с basic-аутентификацией (имя пользователя — <code>opencode</code>)."
+      opencode_agent_label: Агент
+      opencode_agent_help: "Необязательно. Агент opencode, который будет использоваться. Оставьте пустым, чтобы использовать агента по умолчанию. Инструкции для ассистента (системный промпт) задаются в конфигурации агента (см. <code>opencode.json</code>, ключ <code>agent.prompt</code>). Применяется при первом создании сессии обсуждения."
+      free_models_label: Доступные модели
+      free_models_help: Известные бесплатные модели, по одной в строке. Они заполняют выпадающий список моделей.
+      model_label: Модель
+      model_help: "Необязательно. Формат: <code>провайдер/модель</code>. Модель для ответов, заменяющая модель, настроенную для агента. Применяется при первом создании сессии обсуждения."
+      model_default_option: "— по умолчанию —"
+      user_prompt_label: Пользователь-ассистент
+      user_prompt_help: Укажите ID пользователя, от имени которого будут создаваться ответы.
+      user_prompt_badge_label: Бейдж пользователя-ассистента
+      user_prompt_badge_help: Текст, отображаемый под пользователем-ассистентом.
+      enable_on_discussion_started_label: Отвечать при создании обсуждения
+      enable_on_discussion_started_help: Если включено, ассистент отвечает только на первый пост обсуждения. Если выключено, обсуждение превращается в чат между автором и ассистентом — ассистент отвечает на каждое сообщение автора.
+      enabled_tags_label: Теги
+      enabled_tags_help: Выберите теги, в которых ассистент будет генерировать ответы.
+    permissions:
+      use_ai_assistant_label: Использовать AI-ассистента

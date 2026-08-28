@@ -1,46 +1,58 @@
 <?php
 
-namespace MichaelBelgium\FlarumAIAutoReply\Job;
+namespace Stezkoy\FlarumAIOpenReply\Job;
 
 use Carbon\Carbon;
 use Flarum\Post\CommentPost;
 use Flarum\Queue\AbstractJob;
-use GuzzleHttp\Exception\ClientException;
-use MichaelBelgium\FlarumAIAutoReply\AnthropicClient;
-use MichaelBelgium\FlarumAIAutoReply\GoogleClient;
-use MichaelBelgium\FlarumAIAutoReply\IPlatform;
-use MichaelBelgium\FlarumAIAutoReply\OpenAIClient;
-use MichaelBelgium\FlarumAIAutoReply\OpenrouterClient;
+use Flarum\Settings\SettingsRepositoryInterface;
+use Stezkoy\FlarumAIOpenReply\OpencodeClient;
+use Stezkoy\FlarumAIOpenReply\OpencodeSession;
 use Psr\Log\LoggerInterface;
 
 class Reply extends AbstractJob
 {
     public function __construct(
-        private readonly string $platform,
         private readonly int $discussionId,
         private readonly int $assistantId,
-        private readonly array $conversation,
+        private readonly string $postText,
+        private readonly string $discussionTitle,
     ) {
     }
 
     public function handle(
-        LoggerInterface $logger,
-        OpenAIClient $openAIClient,
-        AnthropicClient $anthropicClient,
-        OpenrouterClient $openrouterClient,
-        GoogleClient $googleClient,
+        OpencodeClient $client,
+        SettingsRepositoryInterface $settings,
+        LoggerInterface $logger
     ) {
-        /** @var IPlatform $client */
-        $client = match($this->platform) {
-            'anthropic' => $anthropicClient,
-            'openrouter' => $openrouterClient,
-            'google' => $googleClient,
-            default => $openAIClient,
-        };
-
         try
         {
-            $content = $client->completions($this->conversation);
+            $session = OpencodeSession::query()->firstOrCreate([
+                'discussion_id' => $this->discussionId,
+            ]);
+
+            if (empty($session->session_id))
+            {
+                $sessionId = $client->createSession(
+                    $this->discussionTitle,
+                    $settings->get('stezkoy-ai-openreply.opencode_agent') ?: null,
+                    $settings->get('stezkoy-ai-openreply.model') ?: null,
+                );
+
+                if (empty($sessionId))
+                    return;
+
+                $session->session_id = $sessionId;
+                $session->save();
+            }
+
+            $content = $client->reply(
+                $session->session_id,
+                $this->postText,
+            );
+
+            if (empty($content))
+                return;
 
             $post = new CommentPost();
             $post->discussion_id = $this->discussionId;
@@ -49,11 +61,8 @@ class Reply extends AbstractJob
             $post->content = $content;
 
             $post->save();
-        } catch (ClientException $e) {
-            $logger->error('[AI-AutoReply] Client error while generating reply:');
-            $logger->error($e->getResponse()->getBody());
-        } catch (\Exception $e) {
-            $logger->error('[AI-AutoReply] Error while generating reply: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            $logger->error('[AI Open-Reply] Error while generating reply: ' . $e->getMessage());
         }
     }
 }

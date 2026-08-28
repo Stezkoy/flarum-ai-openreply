@@ -1,41 +1,31 @@
 <?php
 
-namespace MichaelBelgium\FlarumAIAutoReply\Listeners;
+namespace Stezkoy\FlarumAIOpenReply\Listeners;
 
 use Flarum\Post\Event\Posted;
-use Flarum\Post\Post;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\User;
 use Illuminate\Contracts\Queue\Queue;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
-use MichaelBelgium\FlarumAIAutoReply\AnthropicClient;
-use MichaelBelgium\FlarumAIAutoReply\GoogleClient;
-use MichaelBelgium\FlarumAIAutoReply\Job\Reply;
-use MichaelBelgium\FlarumAIAutoReply\OpenAIClient;
-use MichaelBelgium\FlarumAIAutoReply\OpenrouterClient;
+use Stezkoy\FlarumAIOpenReply\Job\Reply;
 use Psr\Log\LoggerInterface;
 
 class ReplyOnPost
 {
-    private string $platform;
-
     public function __construct(
         protected Queue $queue,
         protected SettingsRepositoryInterface $settings,
         protected LoggerInterface $logger,
-        protected OpenAIClient $openAIClient,
-        protected AnthropicClient $anthropicClient,
-        protected OpenrouterClient $openrouterClient,
-        protected GoogleClient $googleClient,
     ) {
-        $this->platform = $this->settings->get('michaelbelgium-ai-autoreply.platform');
     }
 
     public function handle(Posted $event): void
     {
+        if (!$event->actor)
+            return;
+
         $discussion = $event->post->discussion;
-        $enabledTagIds = $this->settings->get('michaelbelgium-ai-autoreply.enabled-tags', '[]');
+        $enabledTagIds = $this->settings->get('stezkoy-ai-openreply.enabled-tags', '[]');
 
         if ($enabledTagIds = json_decode($enabledTagIds, true))
         {
@@ -45,11 +35,10 @@ class ReplyOnPost
                 return;
         }
 
-        $event->actor->assertCan('useChatGPTAssistant', $discussion);
+        $event->actor->assertCan('useAIAssistant', $discussion);
 
-        $posts = $discussion->posts;
-        $replyOnDiscussionStart = $this->settings->get('michaelbelgium-ai-autoreply.enable_on_discussion_started', true);
-        $assistantId = $this->settings->get('michaelbelgium-ai-autoreply.user_prompt');
+        $replyOnDiscussionStart = $this->settings->get('stezkoy-ai-openreply.enable_on_discussion_started', true);
+        $assistantId = $this->settings->get('stezkoy-ai-openreply.user_prompt');
 
         if (empty($assistantId))
         {
@@ -65,7 +54,7 @@ class ReplyOnPost
             return;
         }
 
-        if ($posts->count() == 1)
+        if ($discussion->posts->count() == 1)
             $op = $event->actor->id; //$discussion->firstPost is null when discussion is started :(
         else
         {
@@ -78,31 +67,11 @@ class ReplyOnPost
                 return; //only reply to posts made by OP
         }
 
-        $conversation = $this->postsToAiMessages(
-            $posts->whereIn('user_id', [$op, $assistantId])->collect()
-        );
-
         $this->queue->push(new Reply(
-            $this->platform,
             $discussion->id,
             $assistantId,
-            $conversation->toArray())
-        );
-    }
-
-    private function postsToAiMessages(Collection $posts): Collection
-    {
-        $messages = new Collection();
-
-        /** @var Post $post */
-        foreach ($posts as $post)
-        {
-            $messages->add([
-                'role' => $post->user->id == $this->settings->get('michaelbelgium-ai-autoreply.user_prompt') ? 'assistant' : 'user',
-                'content' => $post->content,
-            ]);
-        }
-
-        return $messages;
+            (string)$event->post->content,
+            $discussion->title,
+        ));
     }
 }

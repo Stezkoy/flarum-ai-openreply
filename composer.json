@@ -1,15 +1,14 @@
 {
-    "name": "michaelbelgium/flarum-ai-autoreply",
-    "description": "AI-powered Auto-Reply Extension for Flarum.",
+    "name": "stezkoy/flarum-ai-openreply",
+    "description": "AI Open-Reply Extension for Flarum, powered by opencode.",
     "keywords": [
         "flarum",
-        "chatgpt",
-        "openai",
         "ai",
+        "openreply",
         "autoreply",
-        "anthropic",
-        "claude",
-        "gpt"
+        "opencode",
+        "assistant",
+        "chatbot"
     ],
     "type": "flarum-extension",
     "license": "MIT",
@@ -22,7 +21,7 @@
         {
             "name": "Ngo Quoc Dat",
             "email": "datlechin@gmail.com",
-            "role": "Developer",
+            "role": "Original Developer",
             "homepage": "https://ngoquocdat.dev"
         },
         {
@@ -30,20 +29,24 @@
             "email": "michael@michaelbelgium.me",
             "role": "Developer",
             "homepage": "https://michaelbelgium.me"
+        },
+        {
+            "name": "stezkoy",
+            "role": "Developer"
         }
     ],
     "support": {
-        "source": "https://github.com/michaelbelgium/flarum-ai-autoreply",
+        "source": "https://github.com/stezkoy/flarum-ai-openreply",
         "forum": "https://discuss.flarum.org/d/38244"
     },
     "autoload": {
         "psr-4": {
-            "MichaelBelgium\\FlarumAIAutoReply\\": "src/"
+            "Stezkoy\\FlarumAIOpenReply\\": "src/"
         }
     },
     "extra": {
         "flarum-extension": {
-            "title": "AI Auto-Reply",
+            "title": "AI Open-Reply",
             "category": "feature",
             "icon": {
                 "image": "icon.svg"

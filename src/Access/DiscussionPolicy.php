@@ -1,6 +1,6 @@
 <?php
 
-namespace MichaelBelgium\FlarumAIAutoReply\Access;
+namespace Stezkoy\FlarumAIOpenReply\Access;
 
 use Flarum\Discussion\Discussion;
 use Flarum\Settings\SettingsRepositoryInterface;
@@ -16,8 +16,8 @@ class DiscussionPolicy extends AbstractPolicy
         $this->settings = $settings;
     }
 
-    public function useChatGPTAssistant(User $actor, Discussion $discussion): bool
+    public function useAIAssistant(User $actor, Discussion $discussion): bool
     {
-        return $actor->hasPermission('discussion.useChatGPTAssistant');
+        return $actor->hasPermission('discussion.useAIAssistant');
     }
 }

@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of datlechin/flarum-chatgpt.
+ * This file is part of stezkoy/flarum-ai-openreply.
  *
  * Copyright (c) 2023 Ngo Quoc Dat.
  *
@@ -9,13 +9,13 @@
  * file that was distributed with this source code.
  */
 
-namespace MichaelBelgium\FlarumAIAutoReply;
+namespace Stezkoy\FlarumAIOpenReply;
 
 use Flarum\Discussion\Discussion;
 use Flarum\Extend;
 use Flarum\Post\Event\Posted;
-use MichaelBelgium\FlarumAIAutoReply\Access\DiscussionPolicy;
-use MichaelBelgium\FlarumAIAutoReply\Listeners\ReplyOnPost;
+use Stezkoy\FlarumAIOpenReply\Access\DiscussionPolicy;
+use Stezkoy\FlarumAIOpenReply\Listeners\ReplyOnPost;
 
 return [
     new Extend\Frontend('forum')
@@ -29,11 +29,12 @@ return [
     new Extend\Locales(__DIR__.'/locale'),
 
     new Extend\Settings()
-        ->default('michaelbelgium-ai-autoreply.platform', 'openai')
-        ->default('michaelbelgium-ai-autoreply.enable_on_discussion_started', true)
-        ->default('michaelbelgium-ai-autoreply.user_prompt_badge_text', 'Assistant')
-        ->serializeToForum('chatGptUserPromptId', 'michaelbelgium-ai-autoreply.user_prompt')
-        ->serializeToForum('chatGptBadgeText', 'michaelbelgium-ai-autoreply.user_prompt_badge_text'),
+        ->default('stezkoy-ai-openreply.opencode_url', 'http://localhost:4096')
+        ->default('stezkoy-ai-openreply.enable_on_discussion_started', true)
+        ->default('stezkoy-ai-openreply.user_prompt_badge_text', 'Assistant')
+        ->default('stezkoy-ai-openreply.free_models', "opencode/big-pickle\nopencode/mouse-spark")
+        ->serializeToForum('aiAssistantUserId', 'stezkoy-ai-openreply.user_prompt')
+        ->serializeToForum('aiAssistantBadgeText', 'stezkoy-ai-openreply.user_prompt_badge_text'),
 
     new Extend\Event()
         ->listen(Posted::class, ReplyOnPost::class),
