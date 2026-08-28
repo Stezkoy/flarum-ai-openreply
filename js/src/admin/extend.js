@@ -29,13 +29,24 @@ export default [
       label: app.translator.trans('stezkoy-ai-openreply.admin.settings.free_models_label'),
       help: app.translator.trans('stezkoy-ai-openreply.admin.settings.free_models_help'),
     }))
-    .setting(() => ({
-      setting: 'stezkoy-ai-openreply.model',
-      type: 'text',
-      placeholder: 'provider/model',
-      label: app.translator.trans('stezkoy-ai-openreply.admin.settings.model_label'),
-      help: app.translator.trans('stezkoy-ai-openreply.admin.settings.model_help'),
-    }))
+    .setting(() => {
+      const freeModels = app.data.settings['stezkoy-ai-openreply.free_models'] || '';
+
+      const options = { '': app.translator.trans('stezkoy-ai-openreply.admin.settings.model_default_option') };
+
+      for (const line of String(freeModels).split(/\r?\n/)) {
+        const model = line.trim();
+        if (model) options[model] = model;
+      }
+
+      return {
+        setting: 'stezkoy-ai-openreply.model',
+        type: 'select',
+        options,
+        label: app.translator.trans('stezkoy-ai-openreply.admin.settings.model_label'),
+        help: app.translator.trans('stezkoy-ai-openreply.admin.settings.model_help'),
+      };
+    })
     .setting(() => ({
       setting: 'stezkoy-ai-openreply.user_prompt',
       type: 'number',

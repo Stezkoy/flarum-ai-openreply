@@ -6,11 +6,11 @@ stezkoy-ai-openreply:
       opencode_password_label: opencode server password
       opencode_password_help: "Optional. The value of <code>OPENCODE_SERVER_PASSWORD</code> if you started the server with basic auth enabled (username is <code>opencode</code>)."
       opencode_agent_label: Agent
-      opencode_agent_help: "Optional. The opencode agent to use. Leave empty to use the default agent. The agent's prompt (see <code>opencode.json</code>, key <code>agent.prompt</code>) is where you configure the assistant's system instructions. Applied when the discussion session is first created."
-      free_models_label: Free model IDs
-      free_models_help: Known free model IDs, one per line. They populate the Model dropdown.
+      opencode_agent_help: "Optional: the opencode agent (assistant persona) to use. Leave empty to use the default agent. Advanced users can define custom agents in <code>opencode.json</code> (key <code>agent.prompt</code> is where the assistant's instructions live). Only applied when a discussion session is first created."
+      free_models_label: Available models
+      free_models_help: "The free models you offer, one per line. They fill the <em>Model</em> dropdown below. Edit this list to add or remove choices."
       model_label: Model
-      model_help: "Optional. Format: <code>provider/model</code>. Free model to use for replies, overrides the model configured for the agent. Applied when the discussion session is first created."
+      model_help: "Optional: which model answers. Leave on <em>— default —</em> to use the model configured for the agent. Only applied when a discussion session is first created."
       model_default_option: "— default —"
       user_prompt_label: User assistant
       user_prompt_help: Enter the user id that will be used to generate AI responses.
