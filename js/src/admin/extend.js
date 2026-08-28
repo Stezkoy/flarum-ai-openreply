@@ -31,7 +31,8 @@ export default [
     }))
     .setting(() => ({
       setting: 'stezkoy-ai-openreply.model',
-      type: 'stezkoy-ai-openreply.model-select',
+      type: 'text',
+      placeholder: 'provider/model',
       label: app.translator.trans('stezkoy-ai-openreply.admin.settings.model_label'),
       help: app.translator.trans('stezkoy-ai-openreply.admin.settings.model_help'),
     }))
