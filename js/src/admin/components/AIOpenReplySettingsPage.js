@@ -54,6 +54,12 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
             this._numberGroup('session_ttl_days_label', 'session_ttl_days_help', 'session_ttl_days'),
           ]),
 
+          m('.Form-group', [
+            m('label', app.translator.trans(PREFIX + '.admin.settings.retry_label')),
+            this._numberGroup('retry_attempts_label', 'retry_attempts_help', 'retry_attempts'),
+            this._numberGroup('retry_delay_seconds_label', 'retry_delay_seconds_help', 'retry_delay_seconds'),
+          ]),
+
           this._tagsGroup(),
 
           m('.Form-group.Form-controls', this.submitButton()),
@@ -235,6 +241,8 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
       max_active_sessions: '10',
       max_messages_per_session: '15',
       session_ttl_days: '3',
+      retry_attempts: '1',
+      retry_delay_seconds: '1',
     };
 
     return defaults[setting] || '';

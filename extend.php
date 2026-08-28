@@ -41,6 +41,8 @@ return [
         ->default('stezkoy-ai-openreply.max_active_sessions', 10)
         ->default('stezkoy-ai-openreply.max_messages_per_session', 15)
         ->default('stezkoy-ai-openreply.session_ttl_days', 3)
+        ->default('stezkoy-ai-openreply.retry_attempts', 1)
+        ->default('stezkoy-ai-openreply.retry_delay_seconds', 1)
         ->serializeToForum('aiAssistantUserId', 'stezkoy-ai-openreply.user_prompt')
         ->serializeToForum('aiAssistantBadgeText', 'stezkoy-ai-openreply.user_prompt_badge_text'),
 

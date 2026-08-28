@@ -150,6 +150,20 @@ class OpencodeClient
         return $payload === null ? null : $this->extractText($payload);
     }
 
+    private function retryAttempts(): int
+    {
+        $attempts = (int)$this->settings->get('stezkoy-ai-openreply.retry_attempts', 1);
+
+        return max(1, min(10, $attempts));
+    }
+
+    private function retryDelaySeconds(): int
+    {
+        $delay = (int)$this->settings->get('stezkoy-ai-openreply.retry_delay_seconds', 1);
+
+        return max(0, min(120, $delay));
+    }
+
     private function parseModel(?string $model): ?array
     {
         if (empty($model))
@@ -169,35 +183,73 @@ class OpencodeClient
 
     private function requestJson(string $method, string $path, array $body, bool $soft = false): ?array
     {
-        try {
-            $response = $this->client->request($method, $this->url.$path, [
-                RequestOptions::JSON => $body,
-            ]);
+        $attempts = $this->retryAttempts();
+        $delay = $this->retryDelaySeconds();
 
-            $status = $response->getStatusCode();
+        for ($attempt = 1; $attempt <= $attempts; $attempt++) {
+            try {
+                $response = $this->client->request($method, $this->url.$path, [
+                    RequestOptions::JSON => $body,
+                ]);
 
-            if ($status >= 400) {
-                if ($soft && $status === 404) {
+                $status = $response->getStatusCode();
+
+                if ($status >= 400) {
+                    if ($soft && $status === 404) {
+                        return null;
+                    }
+
+                    if ($status >= 500) {
+                        // Retryable server error (opencode is probably busy/crashing).
+                        if ($attempt < $attempts) {
+                            $this->logger->warning("[AI Open-Reply] opencode {$method} {$path} failed with HTTP {$status}; retrying {$attempt}/{$attempts}...");
+                            $this->sleep($delay);
+                            continue;
+                        }
+                        $errorBody = (string)$response->getBody();
+                        $this->logger->error("[AI Open-Reply] opencode {$method} {$path} failed ({$status}): ".$errorBody);
+                        return null;
+                    }
+
+                    // 4xx client errors are not retryable, but we still log them.
+                    $errorBody = (string)$response->getBody();
+                    $this->logger->error("[AI Open-Reply] opencode {$method} {$path} failed ({$status}): ".$errorBody);
                     return null;
                 }
 
-                $errorBody = (string)$response->getBody();
-                $this->logger->error("[AI Open-Reply] opencode {$method} {$path} failed ({$status}): ".$errorBody);
+                $responseBody = (string)$response->getBody();
+
+                $json = json_decode($responseBody, true);
+
+                if (!is_array($json)) {
+                    $preview = mb_substr(trim(preg_replace('/\s+/', ' ', $responseBody)), 0, 500);
+                    $this->logger->error(
+                        '[AI Open-Reply] opencode responded with an invalid JSON payload (status '.$status.'). Body: '
+                        .($preview !== '' ? $preview : '(empty)')
+                    );
+                    return null;
+                }
+
+                return $json;
+            } catch (\Throwable $e) {
+                // Network-level failure (connection refused, DNS, timeout, etc.) — retryable.
+                if ($attempt < $attempts) {
+                    $this->logger->warning("[AI Open-Reply] opencode request {$method} {$path} failed: ".$e->getMessage().'; retrying '.$attempt.'/'.$attempts.'...');
+                    $this->sleep($delay);
+                    continue;
+                }
+                $this->logger->error("[AI Open-Reply] opencode request {$method} {$path} failed: ".$e->getMessage());
                 return null;
             }
-
-            $json = json_decode((string)$response->getBody(), true);
-
-            if (!is_array($json)) {
-                $this->logger->error('[AI Open-Reply] opencode responded with an invalid JSON payload.');
-                return null;
-            }
-
-            return $json;
-        } catch (\Throwable $e) {
-            $this->logger->error("[AI Open-Reply] opencode request {$method} {$path} failed: ".$e->getMessage());
-            return null;
         }
+
+        return null;
+    }
+
+    private function sleep(int $seconds): void
+    {
+        if ($seconds > 0)
+            usleep($seconds * 1000000);
     }
 
     private function extractText(array $payload): ?string

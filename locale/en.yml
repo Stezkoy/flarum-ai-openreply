@@ -41,6 +41,11 @@ stezkoy-ai-openreply:
       max_messages_per_session_help: Maximum number of AI replies allowed per session before it is closed to free memory. Set to 0 to disable the limit.
       session_ttl_days_label: Session TTL (days)
       session_ttl_days_help: Sessions idle for longer than this many days are closed to free memory. Set to 0 to disable the TTL.
+      retry_label: Retries
+      retry_attempts_label: Retry attempts
+      retry_attempts_help: Total number of attempts (including the first) for each request to the opencode server. Failed requests are retried after the delay below. Set to 1 to disable retries.
+      retry_delay_seconds_label: Retry delay (seconds)
+      retry_delay_seconds_help: Seconds to wait before each retry. 0 means no delay.
       enabled_tags_label: Tags
       enabled_tags_help: Select in which tags the assistant will generate responses.
       enabled_tags_empty: The flarum-tags extension must be enabled to choose tags.
