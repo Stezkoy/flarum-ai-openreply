@@ -27,11 +27,54 @@ class Reply extends AbstractJob
     ) {
         try
         {
-            $session = OpencodeSession::query()->firstOrCreate([
-                'discussion_id' => $this->discussionId,
-            ]);
+            $maxActive = (int)$settings->get('stezkoy-ai-openreply.max_active_sessions', 10);
+            $maxMessages = (int)$settings->get('stezkoy-ai-openreply.max_messages_per_session', 15);
+            $maxTtlDays = (int)$settings->get('stezkoy-ai-openreply.session_ttl_days', 3);
 
-            if (empty($session->session_id))
+            $session = OpencodeSession::query()
+                ->where('discussion_id', $this->discussionId)
+                ->first();
+
+            if ($session !== null && $maxTtlDays > 0 && $session->updated_at !== null)
+            {
+                $idleSince = Carbon::parse($session->updated_at);
+                if ($idleSince->lt(Carbon::now()->subDays($maxTtlDays)))
+                {
+                    $client->deleteSession($session->session_id);
+                    $session->delete();
+                    $session = null;
+                }
+            }
+
+            if ($session !== null && $maxMessages > 0 && (int)$session->message_count >= $maxMessages)
+            {
+                $client->deleteSession($session->session_id);
+                $session->delete();
+                $session = null;
+            }
+
+            if ($session === null && $maxActive > 0)
+            {
+                $count = OpencodeSession::query()->count();
+
+                if ($count >= $maxActive)
+                {
+                    $toEvict = $count - $maxActive + 1;
+
+                    $stale = OpencodeSession::query()
+                        ->orderBy('updated_at')
+                        ->limit($toEvict)
+                        ->get();
+
+                    foreach ($stale as $staleSession)
+                    {
+                        $client->deleteSession($staleSession->session_id);
+                        $staleSession->delete();
+                    }
+                }
+            }
+
+            if ($session === null)
             {
                 $sessionId = $client->createSession(
                     $this->discussionTitle,
@@ -42,7 +85,10 @@ class Reply extends AbstractJob
                 if (empty($sessionId))
                     return;
 
+                $session = new OpencodeSession();
+                $session->discussion_id = $this->discussionId;
                 $session->session_id = $sessionId;
+                $session->message_count = 0;
                 $session->save();
             }
 
@@ -68,7 +114,11 @@ class Reply extends AbstractJob
             {
                 $client->deleteSession($session->session_id);
                 $session->delete();
+                return;
             }
+
+            $session->message_count = (int)$session->message_count + 1;
+            $session->save();
         } catch (\Throwable $e) {
             $logger->error('[AI Open-Reply] Error while generating reply: ' . $e->getMessage());
         }

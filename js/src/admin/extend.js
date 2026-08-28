@@ -62,6 +62,24 @@ export default [
       help: app.translator.trans('stezkoy-ai-openreply.admin.settings.enable_on_discussion_started_help'),
     }))
     .setting(() => ({
+      setting: 'stezkoy-ai-openreply.max_active_sessions',
+      type: 'number',
+      label: app.translator.trans('stezkoy-ai-openreply.admin.settings.max_active_sessions_label'),
+      help: app.translator.trans('stezkoy-ai-openreply.admin.settings.max_active_sessions_help'),
+    }))
+    .setting(() => ({
+      setting: 'stezkoy-ai-openreply.max_messages_per_session',
+      type: 'number',
+      label: app.translator.trans('stezkoy-ai-openreply.admin.settings.max_messages_per_session_label'),
+      help: app.translator.trans('stezkoy-ai-openreply.admin.settings.max_messages_per_session_help'),
+    }))
+    .setting(() => ({
+      setting: 'stezkoy-ai-openreply.session_ttl_days',
+      type: 'number',
+      label: app.translator.trans('stezkoy-ai-openreply.admin.settings.session_ttl_days_label'),
+      help: app.translator.trans('stezkoy-ai-openreply.admin.settings.session_ttl_days_help'),
+    }))
+    .setting(() => ({
       type: 'flarum-tags.select-tags',
       setting: 'stezkoy-ai-openreply.enabled-tags',
       label: app.translator.trans('stezkoy-ai-openreply.admin.settings.enabled_tags_label'),
