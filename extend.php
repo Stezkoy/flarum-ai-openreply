@@ -12,12 +12,14 @@
 namespace Stezkoy\FlarumAIOpenReply;
 
 use Flarum\Discussion\Discussion;
+use Flarum\Discussion\Event\Deleted as DiscussionDeleted;
 use Flarum\Extend;
 use Flarum\Post\Event\Posted;
 use Stezkoy\FlarumAIOpenReply\Access\DiscussionPolicy;
 use Stezkoy\FlarumAIOpenReply\Api\Controller\CloseAllSessionsController;
 use Stezkoy\FlarumAIOpenReply\Api\Controller\HealthController;
 use Stezkoy\FlarumAIOpenReply\Api\Controller\SessionCountController;
+use Stezkoy\FlarumAIOpenReply\Listeners\CleanupSessionOnDiscussionDeleted;
 use Stezkoy\FlarumAIOpenReply\Listeners\ReplyOnPost;
 
 return [
@@ -48,7 +50,8 @@ return [
         ->post('/ai-openreply/count', 'ai-openreply.count', SessionCountController::class),
 
     new Extend\Event()
-        ->listen(Posted::class, ReplyOnPost::class),
+        ->listen(Posted::class, ReplyOnPost::class)
+        ->listen(DiscussionDeleted::class, CleanupSessionOnDiscussionDeleted::class),
 
     new Extend\Policy()
         ->modelPolicy(Discussion::class, DiscussionPolicy::class),
