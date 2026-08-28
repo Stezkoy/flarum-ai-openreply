@@ -28,6 +28,10 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
       '.ExtensionPage-settings',
       m('.container', [
         m('.AIOpenReplySettings', [
+          m('.AIOpenReplyHero', [
+            m('p', app.translator.trans(PREFIX + '.admin.settings.opencode_intro')),
+            m('a.AIOpenReplyLink', { href: 'https://opencode.ai/', target: '_blank', rel: 'noopener' }, 'https://opencode.ai/'),
+          ]),
           this._group('opencode_url_label', 'opencode_url_help', 'input', 'opencode_url', {
             placeholder: 'http://localhost:4096',
           }),

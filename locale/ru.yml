@@ -3,6 +3,7 @@ stezkoy-ai-openreply:
     settings:
       opencode_url_label: URL opencode-сервера
       opencode_url_help: "Адрес вашего headless-сервера opencode. Запустите его командой <code>opencode serve</code> (порт по умолчанию 4096)."
+      opencode_intro: "OpenCode — это опенсорсный ИИ-агент для написания кода, работающий локально в терминале. Именно он генерирует AI-ответы этого расширения. Зайдите на сайт, чтобы узнать больше и настроить его на своём сервере."
       opencode_username_label: Логин opencode-сервера
       opencode_username_help: "Логин для basic-аутентификации. По умолчанию <code>opencode</code>, если оставить пустым."
       opencode_password_label: Пароль opencode-сервера
