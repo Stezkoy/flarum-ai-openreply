@@ -25,13 +25,13 @@ export default [
     .setting(() => {
       const freeModels = {
         '': app.translator.trans('stezkoy-ai-openreply.admin.settings.model_default_option'),
-        'big-pickle': 'Big Pickle',
-        'mimo-v2.5-free': 'MiMo-V2.5 Free',
-        'hy3-free': 'Hy3 Free',
-        'ling-3.0-flash-fin-free': 'Ling 3.0 Flash Fin Free',
-        'nemotron-3-ultra-free': 'Nemotron 3 Ultra Free',
-        'nemotron-3.5-lightning-free': 'Nemotron 3.5 Lightning Free',
-        'muse-spark-1.2-contributor-free': 'Muse Spark 1.2 Contributor Free',
+        'opencode/big-pickle': 'Big Pickle',
+        'opencode/mimo-v2.5-free': 'MiMo-V2.5 Free',
+        'opencode/hy3-free': 'Hy3 Free',
+        'opencode/ling-3.0-flash-fin-free': 'Ling 3.0 Flash Fin Free',
+        'opencode/nemotron-3-ultra-free': 'Nemotron 3 Ultra Free',
+        'opencode/nemotron-3.5-lightning-free': 'Nemotron 3.5 Lightning Free',
+        'opencode/muse-spark-1.2-contributor-free': 'Muse Spark 1.2 Contributor Free',
       };
 
       return {
