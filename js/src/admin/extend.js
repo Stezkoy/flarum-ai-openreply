@@ -1,17 +1,6 @@
 import Extend from 'flarum/common/extenders';
 import app from 'flarum/admin/app';
 
-const FREE_MODELS = {
-  '': app.translator.trans('stezkoy-ai-openreply.admin.settings.model_default_option'),
-  'big-pickle': 'Big Pickle',
-  'mimo-v2.5-free': 'MiMo-V2.5 Free',
-  'hy3-free': 'Hy3 Free',
-  'ling-3.0-flash-fin-free': 'Ling 3.0 Flash Fin Free',
-  'nemotron-3-ultra-free': 'Nemotron 3 Ultra Free',
-  'nemotron-3.5-lightning-free': 'Nemotron 3.5 Lightning Free',
-  'muse-spark-1.2-contributor-free': 'Muse Spark 1.2 Contributor Free',
-};
-
 export default [
   new Extend.Admin()
     .setting(() => ({
@@ -33,13 +22,26 @@ export default [
       label: app.translator.trans('stezkoy-ai-openreply.admin.settings.opencode_agent_label'),
       help: app.translator.trans('stezkoy-ai-openreply.admin.settings.opencode_agent_help'),
     }))
-    .setting(() => ({
-      setting: 'stezkoy-ai-openreply.model',
-      type: 'select',
-      options: FREE_MODELS,
-      label: app.translator.trans('stezkoy-ai-openreply.admin.settings.model_label'),
-      help: app.translator.trans('stezkoy-ai-openreply.admin.settings.model_help'),
-    }))
+    .setting(() => {
+      const freeModels = {
+        '': app.translator.trans('stezkoy-ai-openreply.admin.settings.model_default_option'),
+        'big-pickle': 'Big Pickle',
+        'mimo-v2.5-free': 'MiMo-V2.5 Free',
+        'hy3-free': 'Hy3 Free',
+        'ling-3.0-flash-fin-free': 'Ling 3.0 Flash Fin Free',
+        'nemotron-3-ultra-free': 'Nemotron 3 Ultra Free',
+        'nemotron-3.5-lightning-free': 'Nemotron 3.5 Lightning Free',
+        'muse-spark-1.2-contributor-free': 'Muse Spark 1.2 Contributor Free',
+      };
+
+      return {
+        setting: 'stezkoy-ai-openreply.model',
+        type: 'select',
+        options: freeModels,
+        label: app.translator.trans('stezkoy-ai-openreply.admin.settings.model_label'),
+        help: app.translator.trans('stezkoy-ai-openreply.admin.settings.model_help'),
+      };
+    })
     .setting(() => ({
       setting: 'stezkoy-ai-openreply.user_prompt',
       type: 'number',
