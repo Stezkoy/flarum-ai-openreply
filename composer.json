@@ -1,6 +1,6 @@
 {
     "name": "stezkoy/flarum-ai-openreply",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "AI Open-Reply Extension for Flarum, powered by opencode.",
     "keywords": [
         "flarum",

@@ -13,5 +13,5 @@
         "build": "webpack --mode production"
     },
     "name": "@stezkoy/flarum-ai-openreply",
-    "version": "0.0.1"
+    "version": "0.0.2"
 }
