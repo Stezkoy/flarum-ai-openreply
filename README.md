@@ -161,7 +161,7 @@ In the extension's admin settings page:
 - **opencode server URL** — the address of your headless opencode server (default `http://localhost:4096`).
 - **opencode server username** — the basic auth username (default `opencode`). Used only when a password is set.
 - **opencode server password** — the `OPENCODE_SERVER_PASSWORD` value if basic auth is enabled.
-- **Agent** — a preset that shapes how the assistant replies: `build` (answers right away) or `plan` (thinks the answer over first), or "Set my own" to type the id of any [opencode agent](https://opencode.ai/docs/agents/) defined on the server (`opencode.json` key `agent`). Unknown ids fall back to the default agent with a server-log warning, so replies never break on a typo.
+- **Agent** — a preset that shapes how the assistant replies: the standard `build` (answers right away) or `plan` (thinks the answer over first), or the default. The server-side validation falls back to the default agent (with a server-log warning) if a saved name is unknown, so a reply never fails on a typo.
 - **System prompt (persona)** — optional free-text instructions for the assistant's behavior, sent with every message (this is what makes "call yourself Pupsik" type personas work without editing the server config).
 - **Model** — the model to use, in `provider/model` format. Pick one of the preset free models (`opencode/...`), "default" to use the agent's model, or select "Set my own" to type any model. This is independent of the agent: the agent fixes *how* it behaves, the model fixes *which* AI answers.
 - **User assistant** — the user ID of the account that posts the AI replies (required).

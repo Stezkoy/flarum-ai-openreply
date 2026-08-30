@@ -10,11 +10,10 @@ stezkoy-ai-openreply:
       opencode_password_help: "Optional. The value of <code>OPENCODE_SERVER_PASSWORD</code> if you started the server with basic auth enabled."
       opencode_agent_label: Agent (behavior)
       opencode_agent_default_option: — default —
-      opencode_agent_help: "Preset that shapes how the assistant replies. <b>build</b> — answers right away; <b>plan</b> — thinks the answer over first. Both ship with opencode; leave the default for a simple direct reply. For your own persona in plain text, use the System prompt field below."
-      opencode_agent_custom_option: Set my own
-      opencode_agent_custom_help: "Type the exact id of an agent from your server's <code>opencode.json</code> (key <code>agent</code>), e.g. <code>moderator</code>. If it isn't defined there, the default agent is used (see the server log)."
+      opencode_agent_help: "Preset that shapes how the assistant replies. <b>build</b> — answers right away; <b>plan</b> — thinks the answer over first. Both ship with opencode; leave the default for a simple direct reply."
       opencode_system_prompt_label: System prompt (persona)
-      opencode_system_prompt_help: "Optional free-text instructions for the assistant's behavior, sent with every message. E.g. <code>Call yourself Pupsik and answer in Russian.</code> Unlike the Agent field, this works without editing anything on the server."
+      opencode_system_prompt_help: "Optional free-text instructions for the assistant's behavior, sent with every message."
+      opencode_system_prompt_placeholder: e.g. Call yourself Pupsik and answer in Russian.
       model_label: Model
       model_help: "Optional: <i>which AI engine</i> answers — this is separate from the agent. Examples: opencode/big-pickle, opencode/mimo-v2.5-free. The agent fixes <i>how</i> it behaves (behavior), the model fixes <i>which</i> AI answers. Leave on <em>— default —</em> to use the model already configured for the agent on the server. Only applied when a discussion session is first created."
       model_default_option: "— default —"

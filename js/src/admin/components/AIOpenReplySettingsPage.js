@@ -48,7 +48,7 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
           this._agentGroup(),
           this._group('opencode_system_prompt_label', 'opencode_system_prompt_help', 'textarea', 'opencode_system_prompt', {
             rows: 3,
-            placeholder: 'e.g. Call yourself Pupsik and answer in Russian.',
+            placeholder: app.translator.trans(PREFIX + '.admin.settings.opencode_system_prompt_placeholder'),
           }),
           this._modelGroup(),
           this._actionsGroup(),
@@ -130,51 +130,31 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
   }
 
   _agentGroup() {
-    let current = this.setting(PREFIX + '.opencode_agent')() || '';
+    const current = this.setting(PREFIX + '.opencode_agent')() || '';
 
-    const isKnown = current === '' || BUILTIN_AGENT_IDS.includes(current);
-
-    const selectValue = isKnown ? current : '__custom__';
+    // A previously saved custom agent id is preserved as an extra option so
+    // the select never silently misrepresents the stored value. New values
+    // can only be the presets below.
+    const unknown = current !== '' && !BUILTIN_AGENT_IDS.includes(current);
 
     return m('.Form-group', [
       m('label', app.translator.trans(PREFIX + '.admin.settings.opencode_agent_label')),
       m(
         'select.FormControl',
         {
-          value: selectValue,
+          value: current,
           onchange: (e) => {
-            const value = e.target.value;
-
-            // Never persist "__custom__" itself: the custom input holds the
-            // actual agent id. Opening it just clears a preset/default so the
-            // user can type their own value.
-            if (value === '__custom__') {
-              const stored = this.setting(PREFIX + '.opencode_agent')();
-              if (stored === '' || BUILTIN_AGENT_IDS.includes(stored)) {
-                this.setting(PREFIX + '.opencode_agent')('');
-              }
-            } else {
-              this.setting(PREFIX + '.opencode_agent')(value);
-            }
-
+            this.setting(PREFIX + '.opencode_agent')(e.target.value);
             m.redraw();
           },
         },
         [
           m('option', { value: '' }, app.translator.trans(PREFIX + '.admin.settings.opencode_agent_default_option')),
           ...BUILTIN_AGENT_IDS.map((id) => m('option', { value: id }, id)),
-          m('option', { value: '__custom__' }, app.translator.trans(PREFIX + '.admin.settings.opencode_agent_custom_option')),
+          ...(unknown ? [m('option', { value: current }, current)] : []),
         ]
       ),
-      isKnown
-        ? m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.opencode_agent_help'))
-        : m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.opencode_agent_custom_help')),
-      m('input.FormControl.AIOpenReplyCustomValue', {
-        type: 'text',
-        placeholder: 'agent id',
-        style: selectValue === '__custom__' ? '' : 'display: none;',
-        bidi: this.setting(PREFIX + '.opencode_agent', ''),
-      }),
+      m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.opencode_agent_help')),
     ]);
   }
 
@@ -182,13 +162,20 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
     let current = this.setting(PREFIX + '.model')() || '';
 
     // A legacy build accidentally persisted the "__custom__" marker as the
-    // model value; treat it as "no model" so the input can be edited again.
-    if (current === '__custom__') current = '';
+    // model value; treat it as an empty custom input.
+    const legacyCustom = current === '__custom__';
+    if (legacyCustom) current = '';
 
     const isPreset = FREE_MODEL_IDS.includes(current);
-    const isDefault = current === '';
 
-    const selectValue = isPreset ? current : isDefault ? '' : '__custom__';
+    // "Set my own" mode. Derived from the stored value on the first render
+    // only; afterwards onchange keeps it in sync, so picking the custom
+    // option doesn't snap the select back to "default" and hide the input.
+    if (this.customModel === undefined) {
+      this.customModel = legacyCustom || (current !== '' && !isPreset);
+    }
+
+    const selectValue = this.customModel ? '__custom__' : isPreset ? current : '';
 
     return m('.Form-group', [
       m('label', app.translator.trans(PREFIX + '.admin.settings.model_label')),
@@ -199,15 +186,11 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
           onchange: (e) => {
             const value = e.target.value;
 
-            // Never persist "__custom__" itself: the custom input holds the
-            // actual model. Opening it just clears a preset/default so the
-            // user can type their own value.
-            if (value === '__custom__') {
-              const stored = this.setting(PREFIX + '.model')();
-              if (stored === '__custom__' || stored === '' || FREE_MODEL_IDS.includes(stored)) {
-                this.setting(PREFIX + '.model')('');
-              }
-            } else {
+            // "__custom__" is a virtual option: the text input below holds
+            // the actual model, so it is never written to the setting itself.
+            this.customModel = value === '__custom__';
+
+            if (!this.customModel) {
               this.setting(PREFIX + '.model')(value);
             }
 
@@ -220,14 +203,17 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
           m('option', { value: '__custom__' }, app.translator.trans(PREFIX + '.admin.settings.model_custom_option')),
         ]
       ),
-      isPreset || isDefault
-        ? m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.model_help'))
-        : m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.model_custom_help')),
-      m('input.FormControl.AIOpenReplyCustomValue', {
+      this.customModel
+        ? m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.model_custom_help'))
+        : m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.model_help')),
+      m('input.FormControl.AIOpenReplyCustomModel', {
         type: 'text',
         placeholder: 'provider/model',
-        style: selectValue === '__custom__' ? '' : 'display: none;',
-        bidi: this.setting(PREFIX + '.model', ''),
+        style: this.customModel ? '' : 'display: none;',
+        value: legacyCustom ? '' : current,
+        oninput: (e) => {
+          this.setting(PREFIX + '.model')(e.target.value);
+        },
       }),
     ]);
   }
