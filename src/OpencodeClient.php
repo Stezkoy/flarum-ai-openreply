@@ -10,10 +10,10 @@ use Psr\Log\LoggerInterface;
 /**
  * Talks to a headless `opencode serve` HTTP server (opencode 1.x API).
  *
- * Model and agent are fixed at session creation time: the opencode 1.x
- * server does not accept them per-message. Tools are denied with an
- * allowlist of zero permissions so the assistant only ever replies with
- * text.
+ * A session is created with only `{ parentID?, title? }`. The agent and
+ * model are applied per-message on `POST /session/:id/message` (agent as a
+ * string, model as `{ providerID, modelID }`), so new discussions pick up
+ * the latest settings.
  *
  * @see https://opencode.ai/docs/server/
  */
@@ -21,6 +21,7 @@ class OpencodeClient
 {
     protected ?Client $client = null;
     protected string $url = '';
+    protected ?array $agents = null;
 
     public function __construct(
         protected SettingsRepositoryInterface $settings,
@@ -50,19 +51,12 @@ class OpencodeClient
         $this->client = new Client($options);
     }
 
-    public function createSession(string $title, ?string $agent = null): ?string
+    public function createSession(string $title): ?string
     {
         if ($this->client === null)
             return null;
 
-        $body = [
-            'title' => $title,
-        ];
-
-        if (!empty($agent))
-            $body['agent'] = $agent;
-
-        $payload = $this->requestJson('POST', '/session', $body);
+        $payload = $this->requestJson('POST', '/session', ['title' => $title]);
 
         return $payload['id'] ?? null;
     }
@@ -118,9 +112,26 @@ class OpencodeClient
 
         // A 404 just means the session is already gone (e.g. it was closed by a
         // TTL/limit or externally), which is normal and not worth logging as an error.
+        // The endpoint also returns a bare `true` on success instead of JSON, which
+        // requestJson() tolerates when $soft is enabled.
         $this->requestJson('DELETE', '/session/'.rawurlencode($sessionId), [], true);
 
         return true;
+    }
+
+    /**
+     * Returns the agents currently known to the opencode server (GET /agent),
+     * or null when the server is unreachable. Each entry has at least a "name".
+     */
+    public function agents(): ?array
+    {
+        if ($this->client === null)
+            return null;
+
+        if ($this->agents === null)
+            $this->agents = $this->requestJson('GET', '/agent', []);
+
+        return $this->agents;
     }
 
     public function reply(string $sessionId, string $text): ?string
@@ -136,8 +147,9 @@ class OpencodeClient
             ],
         ];
 
-        $agent = (string)$this->settings->get('stezkoy-ai-openreply.opencode_agent', '');
+        $agent = $this->resolveAgent((string)$this->settings->get('stezkoy-ai-openreply.opencode_agent', ''));
         $model = $this->parseModel($this->configuredModel());
+        $system = (string)$this->settings->get('stezkoy-ai-openreply.opencode_system_prompt', '');
 
         if ($agent !== '')
             $body['agent'] = $agent;
@@ -145,9 +157,44 @@ class OpencodeClient
         if ($model !== null)
             $body['model'] = $model;
 
+        if ($system !== '')
+            $body['system'] = $system;
+
         $payload = $this->requestJson('POST', $path, $body);
 
         return $payload === null ? null : $this->extractText($payload);
+    }
+
+    /**
+     * The opencode server only knows agents defined in its config (opencode.json).
+     * An unknown name makes it reject the whole message with HTTP 500, so we check
+     * the name against GET /agent and fall back to the default agent if it is not
+     * among the known ones.
+     */
+    private function resolveAgent(string $agent): string
+    {
+        if ($agent === '')
+            return '';
+
+        $known = $this->agents();
+
+        if ($known === null)
+        {
+            $this->logger->warning('[AI Open-Reply] Could not fetch the agent list from the opencode server; using the default agent.');
+            return '';
+        }
+
+        foreach ($known as $candidate)
+        {
+            if (($candidate['name'] ?? null) === $agent)
+                return $agent;
+        }
+
+        $this->logger->warning(
+            '[AI Open-Reply] Agent "'.$agent.'" is not defined on the opencode server (see GET /agent); using the default agent.'
+        );
+
+        return '';
     }
 
     private function retryAttempts(): int
@@ -222,6 +269,13 @@ class OpencodeClient
                 $json = json_decode($responseBody, true);
 
                 if (!is_array($json)) {
+                    // Some endpoints (e.g. DELETE /session/:id) return a bare
+                    // boolean on success instead of JSON. Only endpoints that
+                    // opt in via $soft may return a non-object body.
+                    if ($soft && is_bool($json)) {
+                        return ['ok' => $json];
+                    }
+
                     $preview = mb_substr(trim(preg_replace('/\s+/', ' ', $responseBody)), 0, 500);
                     $this->logger->error(
                         '[AI Open-Reply] opencode responded with an invalid JSON payload (status '.$status.'). Body: '

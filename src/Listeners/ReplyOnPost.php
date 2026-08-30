@@ -25,9 +25,10 @@ class ReplyOnPost
             return;
 
         $discussion = $event->post->discussion;
-        $enabledTagIds = $this->settings->get('stezkoy-ai-openreply.enabled-tags', '[]');
 
-        if ($enabledTagIds = json_decode($enabledTagIds, true))
+        $enabledTagIds = json_decode((string)$this->settings->get('stezkoy-ai-openreply.enabled-tags', '[]'), true);
+
+        if (is_array($enabledTagIds) && $enabledTagIds !== [] && method_exists($discussion, 'tags'))
         {
             $tagIds = Arr::pluck($discussion->tags, 'id');
 
@@ -35,7 +36,8 @@ class ReplyOnPost
                 return;
         }
 
-        $event->actor->assertCan('useAIAssistant', $discussion);
+        if (!$event->actor->can('useAIAssistant', $discussion))
+            return;
 
         $replyOnDiscussionStart = $this->settings->get('stezkoy-ai-openreply.enable_on_discussion_started', true);
         $assistantId = $this->settings->get('stezkoy-ai-openreply.user_prompt');

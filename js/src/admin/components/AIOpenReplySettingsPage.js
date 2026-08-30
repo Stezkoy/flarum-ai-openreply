@@ -4,6 +4,10 @@ import Button from 'flarum/common/components/Button';
 
 const PREFIX = 'stezkoy-ai-openreply';
 
+// The standard agents that ship with opencode (as shown by GET /agent on a
+// stock server). "default" means: let the server pick the agent of the model.
+const BUILTIN_AGENT_IDS = ['build', 'plan'];
+
 const FREE_MODEL_IDS = [
   'opencode/big-pickle',
   'opencode/mimo-v2.5-free',
@@ -41,7 +45,11 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
           this._group('opencode_password_label', 'opencode_password_help', 'input', 'opencode_password', {
             type: 'password',
           }),
-          this._group('opencode_agent_label', 'opencode_agent_help', 'input', 'opencode_agent'),
+          this._agentGroup(),
+          this._group('opencode_system_prompt_label', 'opencode_system_prompt_help', 'textarea', 'opencode_system_prompt', {
+            rows: 3,
+            placeholder: 'e.g. Call yourself Pupsik and answer in Russian.',
+          }),
           this._modelGroup(),
           this._actionsGroup(),
           this._group('user_prompt_label', 'user_prompt_help', 'input', 'user_prompt', {
@@ -114,14 +122,69 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
           placeholder: extra.placeholder,
         },
         extra.type ? { type: extra.type } : {},
-        extra.required ? { required: true } : {}
+        extra.required ? { required: true } : {},
+        extra.rows ? { rows: extra.rows } : {}
       )),
       m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.' + helpKey)),
     ]);
   }
 
+  _agentGroup() {
+    let current = this.setting(PREFIX + '.opencode_agent')() || '';
+
+    const isKnown = current === '' || BUILTIN_AGENT_IDS.includes(current);
+
+    const selectValue = isKnown ? current : '__custom__';
+
+    return m('.Form-group', [
+      m('label', app.translator.trans(PREFIX + '.admin.settings.opencode_agent_label')),
+      m(
+        'select.FormControl',
+        {
+          value: selectValue,
+          onchange: (e) => {
+            const value = e.target.value;
+
+            // Never persist "__custom__" itself: the custom input holds the
+            // actual agent id. Opening it just clears a preset/default so the
+            // user can type their own value.
+            if (value === '__custom__') {
+              const stored = this.setting(PREFIX + '.opencode_agent')();
+              if (stored === '' || BUILTIN_AGENT_IDS.includes(stored)) {
+                this.setting(PREFIX + '.opencode_agent')('');
+              }
+            } else {
+              this.setting(PREFIX + '.opencode_agent')(value);
+            }
+
+            m.redraw();
+          },
+        },
+        [
+          m('option', { value: '' }, app.translator.trans(PREFIX + '.admin.settings.opencode_agent_default_option')),
+          ...BUILTIN_AGENT_IDS.map((id) => m('option', { value: id }, id)),
+          m('option', { value: '__custom__' }, app.translator.trans(PREFIX + '.admin.settings.opencode_agent_custom_option')),
+        ]
+      ),
+      isKnown
+        ? m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.opencode_agent_help'))
+        : m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.opencode_agent_custom_help')),
+      m('input.FormControl.AIOpenReplyCustomValue', {
+        type: 'text',
+        placeholder: 'agent id',
+        style: selectValue === '__custom__' ? '' : 'display: none;',
+        bidi: this.setting(PREFIX + '.opencode_agent', ''),
+      }),
+    ]);
+  }
+
   _modelGroup() {
-    const current = this.setting(PREFIX + '.model')() || '';
+    let current = this.setting(PREFIX + '.model')() || '';
+
+    // A legacy build accidentally persisted the "__custom__" marker as the
+    // model value; treat it as "no model" so the input can be edited again.
+    if (current === '__custom__') current = '';
+
     const isPreset = FREE_MODEL_IDS.includes(current);
     const isDefault = current === '';
 
@@ -134,7 +197,20 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
         {
           value: selectValue,
           onchange: (e) => {
-            this.setting(PREFIX + '.model')(e.target.value);
+            const value = e.target.value;
+
+            // Never persist "__custom__" itself: the custom input holds the
+            // actual model. Opening it just clears a preset/default so the
+            // user can type their own value.
+            if (value === '__custom__') {
+              const stored = this.setting(PREFIX + '.model')();
+              if (stored === '__custom__' || stored === '' || FREE_MODEL_IDS.includes(stored)) {
+                this.setting(PREFIX + '.model')('');
+              }
+            } else {
+              this.setting(PREFIX + '.model')(value);
+            }
+
             m.redraw();
           },
         },
@@ -147,7 +223,7 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
       isPreset || isDefault
         ? m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.model_help'))
         : m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.model_custom_help')),
-      m('input.FormControl.AIOpenReplyCustomModel', {
+      m('input.FormControl.AIOpenReplyCustomValue', {
         type: 'text',
         placeholder: 'provider/model',
         style: selectValue === '__custom__' ? '' : 'display: none;',
@@ -238,6 +314,7 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
       opencode_username: 'opencode',
       opencode_password: '',
       opencode_agent: '',
+      opencode_system_prompt: '',
       model: '',
       user_prompt: '',
       user_prompt_badge_text: 'Assistant',
