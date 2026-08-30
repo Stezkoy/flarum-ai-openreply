@@ -10,7 +10,7 @@ stezkoy-ai-openreply:
       opencode_password_help: "Необязательно. Значение <code>OPENCODE_SERVER_PASSWORD</code>, если вы запустили сервер с basic-аутентификацией."
       opencode_agent_label: Агент (поведение)
       opencode_agent_default_option: — по умолчанию —
-      opencode_agent_help: "Готовый пресет, задающий стиль ответа. <b>build</b> — отвечает сразу; <b>plan</b> — сначала обдумывает. Оба входят в opencode; оставьте «по умолчанию» для простого прямого ответа."
+      opencode_agent_help: "Готовый пресет, задающий стиль ответа. build — отвечает сразу; plan — сначала обдумывает. Оба входят в opencode; оставьте «по умолчанию» для простого прямого ответа."
       opencode_system_prompt_label: Системный промпт (персона)
       opencode_system_prompt_help: "Необязательно: свободный текст с инструкциями о поведении ассистента, отправляется с каждым сообщением."
       opencode_system_prompt_placeholder: "Например: «Называй себя Пупсик и отвечай по-русски»"

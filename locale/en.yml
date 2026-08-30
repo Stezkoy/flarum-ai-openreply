@@ -10,7 +10,7 @@ stezkoy-ai-openreply:
       opencode_password_help: "Optional. The value of <code>OPENCODE_SERVER_PASSWORD</code> if you started the server with basic auth enabled."
       opencode_agent_label: Agent (behavior)
       opencode_agent_default_option: — default —
-      opencode_agent_help: "Preset that shapes how the assistant replies. <b>build</b> — answers right away; <b>plan</b> — thinks the answer over first. Both ship with opencode; leave the default for a simple direct reply."
+      opencode_agent_help: "Preset that shapes how the assistant replies. build — answers right away; plan — thinks the answer over first. Both ship with opencode; leave the default for a simple direct reply."
       opencode_system_prompt_label: System prompt (persona)
       opencode_system_prompt_help: "Optional free-text instructions for the assistant's behavior, sent with every message."
       opencode_system_prompt_placeholder: e.g. Call yourself Pupsik and answer in Russian.
