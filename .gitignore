@@ -11,5 +11,6 @@ tests/.phpunit.result.cache
 .vscode
 js/coverage-ts
 readmebigi.md
+forum.md
 
 summary.md

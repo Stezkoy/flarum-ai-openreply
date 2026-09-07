@@ -189,7 +189,7 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
     }
 
     if (this.freeModels.length === 0) {
-      return null;
+      return m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.model_no_free'));
     }
 
     return m('.AIOpenReplyModelList', [
