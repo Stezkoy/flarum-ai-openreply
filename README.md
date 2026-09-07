@@ -163,13 +163,14 @@ In the extension's admin settings page:
 - **opencode server password** — the `OPENCODE_SERVER_PASSWORD` value if basic auth is enabled.
 - **Agent** — a preset that shapes how the assistant replies: the standard `build` (answers right away) or `plan` (thinks the answer over first), or the default. The server-side validation falls back to the default agent (with a server-log warning) if a saved name is unknown, so a reply never fails on a typo.
 - **System prompt (persona)** — optional free-text instructions for the assistant's behavior, sent with every message (this is what makes "call yourself Pupsik" type personas work without editing the server config).
-- **Model** — the model to use, in `provider/model` format. Pick one of the preset free models (`opencode/...`), "default" to use the agent's model, or select "Set my own" to type any model. This is independent of the agent: the agent fixes *how* it behaves, the model fixes *which* AI answers.
+- **Model** — the model to use, in `provider/model` format (e.g. `opencode/big-pickle`). Type it manually, or click **Get free models** to fetch the currently available free models from your opencode server and click one to fill the field. Leave empty to use the server's default model. This is independent of the agent: the agent fixes *how* it behaves, the model fixes *which* AI answers.
 - **User assistant** — the user ID of the account that posts the AI replies (required).
 - **User assistant badge** — the text shown below the assistant's posts.
 - **Enable on discussion start** — when enabled, the AI replies only when a discussion is started. When disabled, the discussion becomes a chat between the OP and the assistant.
 - **Tags** — restrict the assistant to specific tags.
 - **Actions** — three buttons: **Check connection** (server health + current model), **Count sessions** (total sessions on the server and how many belong to this extension), and **Close all sessions** (closes this extension's sessions; other server sessions are left untouched).
 - **Resource limits** — `max_active_sessions`, `max_messages_per_session`, `session_ttl_days`. Set 0 to disable a limit.
+- **Retries** — `retry_attempts` (total attempts, default 1, max 10) and `retry_delay_seconds` (delay before each retry, default 1, max 120) for requests to the opencode server.
 
 The agent and model are sent with each request, so new discussions pick up the latest setting. The assistant's instructions (a "system prompt") are configured on the agent itself, e.g. in `opencode.json`:
 
@@ -191,6 +192,8 @@ Also grant the "Use AI assistant" permission to the desired user groups.
 - Replies are posted as regular text posts by a designated assistant user
 - Restrict the assistant to selected tags
 - Permission controls for who can trigger the auto-reply
+- Dynamic free model list fetched live from the opencode server (no hardcoded presets)
+- Configurable retries (`retry_attempts`, `retry_delay_seconds`) and resource limits
 
 ## Updating
 
