@@ -8,25 +8,16 @@ const PREFIX = 'stezkoy-ai-openreply';
 // stock server). "default" means: let the server pick the agent of the model.
 const BUILTIN_AGENT_IDS = ['build', 'plan'];
 
-const FREE_MODEL_IDS = [
-  'opencode/big-pickle',
-  'opencode/mimo-v2.5-free',
-  'opencode/hy3-free',
-  'opencode/nemotron-3-ultra-free',
-  'opencode/nemotron-3.5-lightning-free',
-  'opencode/muse-spark-1.2-contributor-free',
-];
-
-const FREE_MODEL_LABELS = {
-  'opencode/big-pickle': 'Big Pickle',
-  'opencode/mimo-v2.5-free': 'MiMo-V2.5 Free',
-  'opencode/hy3-free': 'Hy3 Free',
-  'opencode/nemotron-3-ultra-free': 'Nemotron 3 Ultra Free',
-  'opencode/nemotron-3.5-lightning-free': 'Nemotron 3.5 Lightning Free',
-  'opencode/muse-spark-1.2-contributor-free': 'Muse Spark 1.2 Contributor Free',
-};
-
 export default class AIOpenReplySettingsPage extends ExtensionPage {
+  oninit(vnode) {
+    super.oninit(vnode);
+
+    this.customModel = undefined;
+    this.freeModels = [];
+    this.modelsUnreachable = false;
+    this.loadingModels = false;
+  }
+
   content() {
     return m(
       '.ExtensionPage-settings',
@@ -163,59 +154,94 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
 
     // A legacy build accidentally persisted the "__custom__" marker as the
     // model value; treat it as an empty custom input.
-    const legacyCustom = current === '__custom__';
-    if (legacyCustom) current = '';
-
-    const isPreset = FREE_MODEL_IDS.includes(current);
-
-    // "Set my own" mode. Derived from the stored value on the first render
-    // only; afterwards onchange keeps it in sync, so picking the custom
-    // option doesn't snap the select back to "default" and hide the input.
-    if (this.customModel === undefined) {
-      this.customModel = legacyCustom || (current !== '' && !isPreset);
-    }
-
-    const selectValue = this.customModel ? '__custom__' : isPreset ? current : '';
+    if (current === '__custom__') current = '';
 
     return m('.Form-group', [
       m('label', app.translator.trans(PREFIX + '.admin.settings.model_label')),
-      m(
-        'select.FormControl',
-        {
-          value: selectValue,
-          onchange: (e) => {
-            const value = e.target.value;
-
-            // "__custom__" is a virtual option: the text input below holds
-            // the actual model, so it is never written to the setting itself.
-            this.customModel = value === '__custom__';
-
-            if (!this.customModel) {
-              this.setting(PREFIX + '.model')(value);
-            }
-
-            m.redraw();
-          },
-        },
-        [
-          m('option', { value: '' }, app.translator.trans(PREFIX + '.admin.settings.model_default_option')),
-          ...FREE_MODEL_IDS.map((id) => m('option', { value: id }, FREE_MODEL_LABELS[id])),
-          m('option', { value: '__custom__' }, app.translator.trans(PREFIX + '.admin.settings.model_custom_option')),
-        ]
-      ),
-      this.customModel
-        ? m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.model_custom_help'))
-        : m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.model_help')),
       m('input.FormControl.AIOpenReplyCustomModel', {
         type: 'text',
         placeholder: 'provider/model',
-        style: this.customModel ? '' : 'display: none;',
-        value: legacyCustom ? '' : current,
+        value: current,
         oninput: (e) => {
           this.setting(PREFIX + '.model')(e.target.value);
         },
       }),
+      m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.model_help')),
+      Button.component(
+        {
+          className: 'Button',
+          loading: this.loadingModels,
+          onclick: () => this._loadModels(),
+        },
+        app.translator.trans(PREFIX + '.admin.settings.model_load_button')
+      ),
+      this._modelListNote(),
     ]);
+  }
+
+  _modelListNote() {
+    if (this.loadingModels) {
+      return m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.model_loading'));
+    }
+
+    if (this.modelsUnreachable) {
+      return m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.model_load_fail'));
+    }
+
+    if (this.freeModels.length === 0) {
+      return null;
+    }
+
+    return m('.AIOpenReplyModelList', [
+      m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.model_list_hint')),
+      m(
+        'ul',
+        this.freeModels.map((model) =>
+          m(
+            'li',
+            m(
+              'button.Button',
+              {
+                title: model.id,
+                onclick: () => {
+                  this.setting(PREFIX + '.model')(model.id);
+                  m.redraw();
+                },
+              },
+              [
+                m('code', model.id),
+                model.name && model.name !== model.id ? m('span', model.name) : null,
+              ]
+            )
+          )
+        )
+      ),
+    ]);
+  }
+
+  _loadModels() {
+    this.loadingModels = true;
+    m.redraw();
+
+    app.request({
+      url: app.forum.attribute('apiUrl') + '/ai-openreply/models',
+      method: 'GET',
+      errorHandler: () => {},
+    })
+      .then((data) => {
+        this.freeModels = Array.isArray(data.models)
+          ? data.models.filter((model) => model && typeof model.id === 'string')
+          : [];
+        this.modelsUnreachable = data.reachable === false;
+      })
+      .catch(() => {
+        this.freeModels = [];
+        this.modelsUnreachable = true;
+      })
+      .then(() => {
+        this.loadingModels = false;
+        m.redraw();
+      });
   }
 
   _numberGroup(labelKey, helpKey, setting) {
@@ -246,52 +272,25 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
   }
 
   _tagsGroup() {
-    const selectedIds = this._selectedTagIds();
-    const allTags = app.store.all('tags');
+    // When flarum-tags is enabled we use its official custom setting component
+    // ("flarum-tags.select-tags"). It loads the FULL tag list (all levels) via
+    // app.tagList.load(['parent']) and renders the standard tag-selection modal,
+    // unlike app.store.all('tags') which only holds whatever happened to be
+    // loaded into the store in the current admin session.
+    if (app.data.extensions && app.data.extensions['flarum-tags']) {
+      return this.buildSettingComponent({
+        type: 'flarum-tags.select-tags',
+        setting: PREFIX + '.enabled-tags',
+        label: app.translator.trans(PREFIX + '.admin.settings.enabled_tags_label'),
+        help: app.translator.trans(PREFIX + '.admin.settings.enabled_tags_help'),
+      });
+    }
 
+    // Fallback: flarum-tags is not installed/enabled.
     return m('.Form-group', [
       m('label', app.translator.trans(PREFIX + '.admin.settings.enabled_tags_label')),
-      m('.AIOpenReplyTagList', [
-        allTags.length === 0
-          ? m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.enabled_tags_empty'))
-          : allTags.map((tag) => {
-              const id = String(tag.id());
-              const checked = selectedIds.includes(id);
-              return m(
-                'button.AIOpenReplyTag',
-                {
-                  type: 'button',
-                  className: checked ? 'selected' : '',
-                  onclick: () => this._toggleTag(id),
-                },
-                tag.name()
-              );
-            }),
-      ]),
-      m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.enabled_tags_help')),
+      m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.enabled_tags_empty')),
     ]);
-  }
-
-  _toggleTag(id) {
-    const selected = this._selectedTagIds();
-    const index = selected.indexOf(id);
-    if (index === -1) {
-      selected.push(id);
-    } else {
-      selected.splice(index, 1);
-    }
-    this.setting(PREFIX + '.enabled-tags')(JSON.stringify(selected));
-    m.redraw();
-  }
-
-  _selectedTagIds() {
-    let selected = [];
-    try {
-      selected = JSON.parse(this.setting(PREFIX + '.enabled-tags', '[]')() || '[]');
-    } catch (e) {
-      selected = [];
-    }
-    return selected.map(String);
   }
 
   _default(setting) {

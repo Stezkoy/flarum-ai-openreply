@@ -1,6 +1,5 @@
 {
     "name": "stezkoy/flarum-ai-openreply",
-    "version": "0.0.2",
     "description": "AI Open-Reply Extension for Flarum, powered by opencode.",
     "keywords": [
         "flarum",
@@ -33,12 +32,14 @@
         },
         {
             "name": "Stezkoy",
+            "email": "stezko@gmail.com",
             "role": "Developer"
         }
     ],
     "support": {
         "source": "https://github.com/stezkoy/flarum-ai-openreply",
-        "forum": "https://discuss.flarum.org/d/38244"
+        "issues": "https://github.com/stezkoy/flarum-ai-openreply/issues",
+        "forum": "https://discuss.flarum.org/"
     },
     "autoload": {
         "psr-4": {

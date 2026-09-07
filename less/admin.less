@@ -17,37 +17,49 @@
     max-width: 400px;
   }
 
+  .AIOpenReplyModelList {
+    margin-top: 6px;
+
+    ul {
+      margin: 4px 0 0;
+      padding-left: 18px;
+      list-style: disc;
+      columns: 2;
+      column-gap: 16px;
+    }
+
+    li {
+      margin-bottom: 4px;
+      break-inside: avoid;
+    }
+
+    li button.Button {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 6px;
+      padding: 2px 6px;
+      font-size: 13px;
+      background: none;
+      border: 1px solid transparent;
+
+      &:hover, &:focus {
+        border-color: var(--control-color);
+        background: var(--control-bg);
+      }
+
+      code {
+        color: var(--text-color);
+        font-size: 13px;
+      }
+      span {
+        color: var(--muted-color);
+        font-size: 12px;
+      }
+    }
+  }
+
   .helpText {
     margin-top: 4px;
-  }
-
-  .AIOpenReplyTagList {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  .AIOpenReplyTag {
-    display: inline-block;
-    border: 1px solid var(--control-bg);
-    background: var(--control-bg);
-    border-radius: var(--border-radius);
-    padding: 5px 12px;
-    cursor: pointer;
-    font-size: 13px;
-    line-height: 1.2;
-    color: var(--text-color);
-    transition:
-      background 0.15s ease,
-      border-color 0.15s ease,
-      color 0.15s ease;
-
-    &.selected,
-    &:hover {
-      background: var(--primary-color);
-      border-color: var(--primary-color);
-      color: #fff;
-    }
   }
 
   .AIOpenReplyHero {

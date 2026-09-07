@@ -15,10 +15,12 @@ stezkoy-ai-openreply:
       opencode_system_prompt_help: "Optional free-text instructions for the assistant's behavior, sent with every message."
       opencode_system_prompt_placeholder: e.g. Call yourself Pupsik and answer in Russian.
       model_label: Model
-      model_help: "Optional: <i>which AI engine</i> answers — this is separate from the agent. Examples: opencode/big-pickle, opencode/mimo-v2.5-free. The agent fixes <i>how</i> it behaves (behavior), the model fixes <i>which</i> AI answers. Leave on <em>— default —</em> to use the model already configured for the agent on the server. Only applied when a discussion session is first created."
-      model_default_option: "— default —"
-      model_custom_option: Set my own
-      model_custom_help: "Enter your model as <code>provider/model</code> (e.g. <code>opencode/big-pickle</code>)."
+      model_help: "Type <code>provider/model</code> (e.g. <code>opencode/big-pickle</code>). Leave empty to use the server's default model."
+      model_load_button: Get free models
+      model_loading: Loading the available free models…
+      model_list_hint: "Click a model to fill the field:"
+      model_no_free: No free models were found on the reachable providers.
+      model_load_fail: Could not load the model list from the opencode server. Check the connection and try again.
       user_prompt_label: User assistant
       user_prompt_help: Enter the user id that will be used to generate AI responses.
       user_prompt_badge_label: User assistant badge

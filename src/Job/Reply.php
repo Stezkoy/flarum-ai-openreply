@@ -17,7 +17,21 @@ class Reply extends AbstractJob
         private readonly int $assistantId,
         private readonly string $postText,
         private readonly string $discussionTitle,
+        private readonly int $timeout = 0,
     ) {
+    }
+
+    /**
+     * The Flarum queue worker runs with a --timeout (default 60s). Generating an
+     * AI reply is a single synchronous HTTP call to the opencode server that can
+     * legitimately take far longer (the client allows up to 600s per request, and
+     * retries add more). Without this method the worker's timeout alarm kills the
+     * job mid-request with a TimeoutExceededException. We return the budget that
+     * was captured at dispatch time (which already covers the retry envelope).
+     */
+    public function timeout(): int
+    {
+        return $this->timeout > 0 ? $this->timeout : 600;
     }
 
     public function handle(

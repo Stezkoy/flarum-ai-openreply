@@ -91,6 +91,113 @@ class OpencodeClient
     }
 
     /**
+     * Returns a flat list of free models contributed by the connected
+     * providers, or null when the server is unreachable.
+     *
+     * The list is derived from `GET /provider`: only providers whose auth
+     * currently works (`connected`) are included, and only models whose
+     * cost is zero on both input and output. Each entry is:
+     *
+     *     ['id' => 'provider/model', 'name' => ..., 'status' => ..., 'isDefault' => bool]
+     *
+     * "isDefault" marks the model the opencode server uses by default for its
+     * provider. The server default (`'provider'/modelId` of the first provider
+     * that declares one) is returned as "default".
+     *
+     * @return array{models?: array<int, array{id: string, name: string, status: string, isDefault: bool}>, reachable?: bool, default?: ?string}|null
+     */
+    public function models(): ?array
+    {
+        if ($this->client === null)
+            return null;
+
+        $payload = $this->requestJson('GET', '/provider', []);
+
+        if ($payload === null)
+            return null;
+
+        $defaults = $payload['default'] ?? [];
+        $connected = $payload['connected'] ?? [];
+        $all = $payload['all'] ?? [];
+
+        if (!is_array($defaults) || !is_array($connected) || !is_array($all))
+            return null;
+
+        $models = [];
+
+        foreach ($all as $provider) {
+            if (!is_array($provider))
+                continue;
+
+            $providerId = $provider['id'] ?? null;
+            $providerModels = $provider['models'] ?? [];
+
+            if (!is_string($providerId) || !is_array($providerModels))
+                continue;
+
+            if (!in_array($providerId, $connected, true))
+                continue;
+
+            foreach ($providerModels as $modelId => $model) {
+                if (!is_array($model) || !$this->isFreeModel($model))
+                    continue;
+
+                $models[] = [
+                    'id' => $providerId.'/'.$modelId,
+                    'name' => (string)($model['name'] ?? $modelId),
+                    'status' => (string)($model['status'] ?? 'active'),
+                    'isDefault' => ($defaults[$providerId] ?? null) === $modelId,
+                ];
+            }
+        }
+
+        // Deterministic order: the provider's default first, then alphabetical.
+        usort($models, function (array $a, array $b): int {
+            if ($a['isDefault'] !== $b['isDefault'])
+                return $a['isDefault'] ? -1 : 1;
+
+            return strcmp($a['id'], $b['id']);
+        });
+
+        $default = null;
+
+        foreach ($defaults as $providerId => $modelId) {
+            if (!in_array($providerId, $connected, true))
+                continue;
+
+            if (is_string($providerId) && is_string($modelId) && $modelId !== '') {
+                $default = $providerId.'/'.$modelId;
+                break;
+            }
+        }
+
+        return [
+            'models' => $models,
+            'reachable' => true,
+            'default' => $default,
+        ];
+    }
+
+    /**
+     * A model is treated as free when both its input and output cost are zero.
+     */
+    private function isFreeModel(array $model): bool
+    {
+        $cost = $model['cost'] ?? null;
+
+        if (!is_array($cost))
+            return false;
+
+        $input = $cost['input'] ?? null;
+        $output = $cost['output'] ?? null;
+
+        if (!is_numeric($input) || !is_numeric($output))
+            return false;
+
+        return (float)$input === 0.0 && (float)$output === 0.0;
+    }
+
+    /**
      * Returns the total number of sessions currently on the opencode server
      * (all of them, including ones not created by this extension), or null
      * when the server is unreachable.

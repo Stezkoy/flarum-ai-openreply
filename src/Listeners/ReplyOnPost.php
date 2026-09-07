@@ -30,12 +30,11 @@ class ReplyOnPost
 
         if (is_array($enabledTagIds) && $enabledTagIds !== [])
         {
-            try {
-                $tagIds = Arr::pluck($discussion->tags, 'id');
-            } catch (\Throwable $e) {
-                // flarum-tags extension not available — no filtering
+            // flarum-tags extension not available — no filtering.
+            if (!class_exists('Flarum\Tags\Tag'))
                 return;
-            }
+
+            $tagIds = Arr::pluck($discussion->tags, 'id');
 
             if (!array_intersect($enabledTagIds, $tagIds))
                 return;
@@ -74,11 +73,30 @@ class ReplyOnPost
                 return; //only reply to posts made by OP
         }
 
+        $timeout = $this->jobTimeout();
+
         $this->queue->push(new Reply(
             $discussion->id,
             $assistantId,
             (string)$event->post->content,
             $discussion->title,
+            $timeout,
         ));
+    }
+
+    /**
+     * The queue worker's --timeout (default 60s) is shorter than the worst-case
+     * AI generation: each opencode call can run up to the client's 600s request
+     * timeout, and retries on top of that add more. Compute a job timeout that
+     * covers the full retry envelope so the worker doesn't kill the job mid-call
+     * with a TimeoutExceededException.
+     */
+    private function jobTimeout(): int
+    {
+        $attempts = max(1, (int)$this->settings->get('stezkoy-ai-openreply.retry_attempts', 1));
+        $delay = max(0, (int)$this->settings->get('stezkoy-ai-openreply.retry_delay_seconds', 1));
+
+        // 600s per request timeout (see OpencodeClient) + buffer.
+        return ($attempts * 600) + (($attempts - 1) * $delay) + 30;
     }
 }
