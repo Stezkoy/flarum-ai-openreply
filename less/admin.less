@@ -1,77 +1,117 @@
+// Admin settings for stezkoy/flarum-ai-openreply.
+//
+// Unified admin style (see ai_gen/docs/03-admin.md 3.4.1): outer card on
+// control-bg, section cards on body-bg with primary-coloured headings.
+// Kept as flat CSS on purpose — Less.php may fail on nested @media/& blocks.
+
 .AIOpenReplySettings {
-  max-width: 700px;
-  .Form-group {
-    + .Form-group {
-      margin-top: 14px;
-    }
+  margin: 0 auto;
+  background: var(--control-bg);
+  padding: 20px;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 4px var(--shadow-color);
+}
 
-    select.FormControl {
-      max-width: 400px;
-    }
-  }
-  textarea.FormControl {
-    max-width: 400px;
-  }
-  .AIOpenReplyCustomModel {
-    margin-top: 8px;
-    max-width: 400px;
-  }
+.AIOpenReplySettings .Form-group {
+  margin: 0;
+}
 
-  .AIOpenReplyModelList {
-    margin-top: 6px;
+.AIOpenReplySettings .Form-controls {
+  margin-top: 4px;
+}
 
-    ul {
-      margin: 4px 0 0;
-      padding-left: 18px;
-      list-style: disc;
-      columns: 2;
-      column-gap: 16px;
-    }
+.AIOpenReplySettings-section {
+  background: var(--body-bg);
+  border-radius: var(--border-radius);
+  box-shadow: 0 1px 3px var(--shadow-color);
+  padding: 20px;
+  margin-bottom: 20px;
+}
 
-    li {
-      margin-bottom: 4px;
-      break-inside: avoid;
-    }
+.AIOpenReplySettings-section:last-child {
+  margin-bottom: 0;
+}
 
-    li button.Button {
-      display: inline-flex;
-      align-items: baseline;
-      gap: 6px;
-      padding: 2px 6px;
-      font-size: 13px;
-      background: none;
-      border: 1px solid transparent;
+.AIOpenReplySettings-section h3 {
+  margin: 0 0 14px;
+  color: var(--primary-color);
+  font-size: 15px;
+  font-weight: 700;
+}
 
-      &:hover, &:focus {
-        border-color: var(--control-color);
-        background: var(--control-bg);
-      }
+.AIOpenReplySettings-sectionBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 
-      code {
-        color: var(--text-color);
-        font-size: 13px;
-      }
-      span {
-        color: var(--muted-color);
-        font-size: 12px;
-      }
-    }
-  }
+.AIOpenReplySettings select.FormControl {
+  max-width: 400px;
+}
 
-  .helpText {
-    margin-top: 4px;
-  }
+.AIOpenReplySettings textarea.FormControl {
+  max-width: 400px;
+}
 
-  .AIOpenReplyHero {
-    margin-bottom: 20px;
-    max-width: 640px;
+.AIOpenReplyCustomModel {
+  max-width: 400px;
+}
 
-    p {
-      margin: 0 0 6px;
-    }
+.AIOpenReplyModelList {
+  margin-top: 6px;
+}
 
-    .AIOpenReplyLink {
-      font-size: 13px;
-    }
-  }
+.AIOpenReplyModelList ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  list-style: disc;
+  columns: 2;
+  column-gap: 16px;
+}
+
+.AIOpenReplyModelList li {
+  margin-bottom: 4px;
+  break-inside: avoid;
+}
+
+.AIOpenReplyModelList li button.Button {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 2px 6px;
+  font-size: 13px;
+  background: none;
+  border: 1px solid transparent;
+}
+
+.AIOpenReplyModelList li button.Button:hover,
+.AIOpenReplyModelList li button.Button:focus {
+  border-color: var(--control-color);
+  background: var(--control-bg);
+}
+
+.AIOpenReplyModelList li button.Button code {
+  color: var(--text-color);
+  font-size: 13px;
+}
+
+.AIOpenReplyModelList li button.Button span {
+  color: var(--muted-color);
+  font-size: 12px;
+}
+
+.AIOpenReplyHero {
+  background: var(--body-bg);
+  border-left: 3px solid var(--primary-color);
+  border-radius: 6px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+}
+
+.AIOpenReplyHero p {
+  margin: 0 0 6px;
+}
+
+.AIOpenReplyHero .AIOpenReplyLink {
+  font-size: 13px;
 }
