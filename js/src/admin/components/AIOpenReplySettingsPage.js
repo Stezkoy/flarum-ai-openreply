@@ -39,31 +39,6 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
             }),
             this._agentGroup(),
           ]),
-          this._section('model_section', [
-            this._group('opencode_system_prompt_label', 'opencode_system_prompt_help', 'textarea', 'opencode_system_prompt', {
-              rows: 3,
-              placeholder: app.translator.trans(PREFIX + '.admin.settings.opencode_system_prompt_placeholder'),
-            }),
-            this._modelGroup(),
-          ]),
-          this._section('trigger_section', [
-            this._group('user_prompt_label', 'user_prompt_help', 'input', 'user_prompt', {
-              type: 'number',
-              required: true,
-            }),
-            this._group('user_prompt_badge_label', 'user_prompt_badge_help', 'input', 'user_prompt_badge_text'),
-            this._switchGroup(),
-            this._tagsGroup(),
-          ]),
-          this._section('limits_label', [
-            this._numberGroup('max_active_sessions_label', 'max_active_sessions_help', 'max_active_sessions'),
-            this._numberGroup('max_messages_per_session_label', 'max_messages_per_session_help', 'max_messages_per_session'),
-            this._numberGroup('session_ttl_days_label', 'session_ttl_days_help', 'session_ttl_days'),
-          ]),
-          this._section('retry_label', [
-            this._numberGroup('retry_attempts_label', 'retry_attempts_help', 'retry_attempts'),
-            this._numberGroup('retry_delay_seconds_label', 'retry_delay_seconds_help', 'retry_delay_seconds'),
-          ]),
           this._section('actions_label', [
             m('.ButtonGroup', [
               Button.component(
@@ -92,6 +67,31 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
               ),
             ]),
             m('p.helpText', this.statusMessage || app.translator.trans(PREFIX + '.admin.settings.actions_help')),
+          ]),
+          this._section('model_section', [
+            this._group('opencode_system_prompt_label', 'opencode_system_prompt_help', 'textarea', 'opencode_system_prompt', {
+              rows: 3,
+              placeholder: app.translator.trans(PREFIX + '.admin.settings.opencode_system_prompt_placeholder'),
+            }),
+            this._modelGroup(),
+          ]),
+          this._section('trigger_section', [
+            this._group('user_prompt_label', 'user_prompt_help', 'input', 'user_prompt', {
+              type: 'number',
+              required: true,
+            }),
+            this._group('user_prompt_badge_label', 'user_prompt_badge_help', 'input', 'user_prompt_badge_text'),
+            this._switchGroup(),
+            this._tagsGroup(),
+          ]),
+          this._section('limits_label', [
+            this._numberGroup('max_active_sessions_label', 'max_active_sessions_help', 'max_active_sessions'),
+            this._numberGroup('max_messages_per_session_label', 'max_messages_per_session_help', 'max_messages_per_session'),
+            this._numberGroup('session_ttl_days_label', 'session_ttl_days_help', 'session_ttl_days'),
+          ]),
+          this._section('retry_label', [
+            this._numberGroup('retry_attempts_label', 'retry_attempts_help', 'retry_attempts'),
+            this._numberGroup('retry_delay_seconds_label', 'retry_delay_seconds_help', 'retry_delay_seconds'),
           ]),
 
           m('.Form-group.Form-controls', this.submitButton()),
