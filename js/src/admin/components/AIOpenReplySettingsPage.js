@@ -259,11 +259,13 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
   }
 
   _switchGroup() {
+    const onDiscussionStart = this.setting(PREFIX + '.enable_on_discussion_started', '1')() === '1';
+
     return m('.Form-group', [
       m(
         Switch,
         {
-          state: this.setting(PREFIX + '.enable_on_discussion_started', '1')() === '1',
+          state: onDiscussionStart,
           onchange: (value) => {
             this.setting(PREFIX + '.enable_on_discussion_started')(value ? '1' : '');
           },
@@ -271,6 +273,21 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
         app.translator.trans(PREFIX + '.admin.settings.enable_on_discussion_started_label')
       ),
       m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.enable_on_discussion_started_help')),
+      onDiscussionStart
+        ? null
+        : [
+            m(
+              Switch,
+              {
+                state: this.setting(PREFIX + '.reply_to_all_in_discussion', '0')() === '1',
+                onchange: (value) => {
+                  this.setting(PREFIX + '.reply_to_all_in_discussion')(value ? '1' : '');
+                },
+              },
+              app.translator.trans(PREFIX + '.admin.settings.reply_to_all_label')
+            ),
+            m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.reply_to_all_help')),
+          ],
     ]);
   }
 

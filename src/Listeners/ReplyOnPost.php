@@ -60,17 +60,20 @@ class ReplyOnPost
             return;
         }
 
-        if ($discussion->posts->count() == 1)
-            $op = $event->actor->id; //$discussion->firstPost is null when discussion is started :(
-        else
-        {
+        if ($discussion->posts->count() == 1) {
+            // $discussion->firstPost is null when discussion is started :(
+        } else {
             if ($replyOnDiscussionStart)
                 return; //only reply on discussion start, not on subsequent posts
 
-            $op = $discussion->firstPost->user->id;
+            $replyToAll = $this->settings->get('stezkoy-ai-openreply.reply_to_all_in_discussion', false);
 
-            if ($op != $event->actor->id)
-                return; //only reply to posts made by OP
+            if (!$replyToAll) {
+                $op = $discussion->firstPost->user->id;
+
+                if ($op != $event->actor->id)
+                    return; //only reply to posts made by OP
+            }
         }
 
         $timeout = $this->jobTimeout();

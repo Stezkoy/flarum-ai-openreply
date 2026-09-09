@@ -38,6 +38,7 @@ return [
         ->default('stezkoy-ai-openreply.opencode_url', 'http://localhost:4096')
         ->default('stezkoy-ai-openreply.opencode_username', 'opencode')
         ->default('stezkoy-ai-openreply.enable_on_discussion_started', true)
+        ->default('stezkoy-ai-openreply.reply_to_all_in_discussion', false)
         ->default('stezkoy-ai-openreply.user_prompt_badge_text', 'Assistant')
         ->default('stezkoy-ai-openreply.max_active_sessions', 10)
         ->default('stezkoy-ai-openreply.max_messages_per_session', 15)
