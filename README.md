@@ -168,7 +168,7 @@ In the extension's admin settings page:
 - **User assistant badge** — the text shown below the assistant's posts.
 - **Enable on discussion start** — when enabled, the AI replies only when a discussion is started. When disabled, the discussion becomes a chat between the OP and the assistant.
 - **Tags** — restrict the assistant to specific tags.
-- **Actions** — three buttons: **Check connection** (server health + current model), **Count sessions** (total sessions on the server and how many belong to this extension), and **Close all sessions** (closes this extension's sessions; other server sessions are left untouched).
+- **Actions** — three buttons: **Check connection** (server health + current model), **Count sessions** (total sessions on the server and how many belong to this extension), and **Close all sessions** (closes this extension's sessions in bounded batches — if some remain, click again; other server sessions are left untouched).
 - **Resource limits** — `max_active_sessions`, `max_messages_per_session`, `session_ttl_days`. Set 0 to disable a limit.
 - **Retries** — `retry_attempts` (total attempts, default 1, max 10) and `retry_delay_seconds` (delay before each retry, default 1, max 120) for requests to the opencode server.
 
@@ -192,6 +192,7 @@ Also grant the "Use AI assistant" permission to the desired user groups.
 - Replies are posted as regular text posts by a designated assistant user
 - Restrict the assistant to selected tags
 - Permission controls for who can trigger the auto-reply
+- Replies go through the full Flarum event lifecycle: discussion counters, last-post pointers and subscriber notifications stay correct
 - Dynamic free model list fetched live from the opencode server (no hardcoded presets)
 - Configurable retries (`retry_attempts`, `retry_delay_seconds`) and resource limits
 

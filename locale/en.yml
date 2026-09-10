@@ -43,6 +43,7 @@ stezkoy-ai-openreply:
       connection_success_no_model: "Connection successful. No model set — the server default will be used."
       connection_fail: Connection failed. Make sure the server is running and credentials are correct.
       sessions_closed: Sessions closed.
+      sessions_closed_partial: "Closed {count} sessions, {remaining} remain — click again to close the rest."
       session_count_result: "Sessions on the server: {total}. Extension sessions: {extension}."
       session_count_fail: Could not count sessions. Check the connection first.
       sessions_close_fail: Could not close sessions. Check the connection first.

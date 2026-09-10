@@ -23,16 +23,20 @@ class CloseAllSessionsController implements RequestHandlerInterface
 
         $total = $this->client->sessionCount();
 
-        $closed = 0;
+        // Deleting runs synchronously within this admin request, so it is
+        // bounded: short per-call timeouts, a time budget and a stop at the
+        // first failure (see OpencodeClient::deleteSessions()). Whatever is
+        // left over, the admin simply clicks the button again.
+        $sessionIds = OpencodeSession::query()->pluck('session_id')->all();
 
-        foreach (OpencodeSession::query()->get() as $session) {
-            $this->client->deleteSession($session->session_id);
-            $session->delete();
-            $closed++;
-        }
+        $result = $this->client->deleteSessions($sessionIds);
+
+        OpencodeSession::query()->whereIn('session_id', $result['deleted'])->delete();
 
         return new JsonResponse([
-            'closed' => $closed,
+            'closed' => count($result['deleted']),
+            'remaining' => (int)OpencodeSession::query()->count(),
+            'stoppedEarly' => $result['stoppedEarly'],
             'total' => $total,
         ]);
     }

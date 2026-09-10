@@ -2,7 +2,7 @@ import app from 'flarum/admin/app';
 import Extend from 'flarum/common/extenders';
 import AIOpenReplySettingsPage from './components/AIOpenReplySettingsPage';
 
-app.initializers.add('stezkoy-ai-openreply', () => {
+app.initializers.add('stezkoy/flarum-ai-openreply', () => {
   app.registry
     .for('stezkoy-ai-openreply')
     .registerPage(AIOpenReplySettingsPage);

@@ -24,6 +24,15 @@ class ReplyOnPost
         if (!$event->actor)
             return;
 
+        $assistantId = $this->settings->get('stezkoy-ai-openreply.user_prompt');
+
+        // Never reply to the assistant's own posts. The Reply job dispatches
+        // its Posted event with the assistant user as the actor, so without
+        // this guard the assistant would answer itself endlessly whenever
+        // "reply to all" is enabled.
+        if (!empty($assistantId) && (int)$event->actor->id === (int)$assistantId)
+            return;
+
         $discussion = $event->post->discussion;
 
         $enabledTagIds = json_decode((string)$this->settings->get('stezkoy-ai-openreply.enabled-tags', '[]'), true);
@@ -44,7 +53,6 @@ class ReplyOnPost
             return;
 
         $replyOnDiscussionStart = $this->settings->get('stezkoy-ai-openreply.enable_on_discussion_started', true);
-        $assistantId = $this->settings->get('stezkoy-ai-openreply.user_prompt');
 
         if (empty($assistantId))
         {
@@ -60,9 +68,11 @@ class ReplyOnPost
             return;
         }
 
-        if ($discussion->posts->count() == 1) {
-            // $discussion->firstPost is null when discussion is started :(
-        } else {
+        // The discussion-starting post is number 1 (assigned by Post::boot's
+        // creating observer). Reading ->number avoids the posts relation,
+        // which would lazy-load every post of the discussion just to count them.
+        if ((int)$event->post->number !== 1)
+        {
             if ($replyOnDiscussionStart)
                 return; //only reply on discussion start, not on subsequent posts
 

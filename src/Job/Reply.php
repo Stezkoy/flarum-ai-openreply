@@ -6,6 +6,8 @@ use Carbon\Carbon;
 use Flarum\Post\CommentPost;
 use Flarum\Queue\AbstractJob;
 use Flarum\Settings\SettingsRepositoryInterface;
+use Flarum\User\User;
+use Illuminate\Contracts\Events\Dispatcher;
 use Stezkoy\FlarumAIOpenReply\OpencodeClient;
 use Stezkoy\FlarumAIOpenReply\OpencodeSession;
 use Psr\Log\LoggerInterface;
@@ -37,7 +39,8 @@ class Reply extends AbstractJob
     public function handle(
         OpencodeClient $client,
         SettingsRepositoryInterface $settings,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        Dispatcher $events
     ) {
         try
         {
@@ -110,6 +113,14 @@ class Reply extends AbstractJob
             if (empty($content))
                 return;
 
+            $assistant = User::find($this->assistantId);
+
+            if ($assistant === null)
+            {
+                $logger->error('[AI Open-Reply] Assistant user '.$this->assistantId.' no longer exists; reply skipped.');
+                return;
+            }
+
             $post = new CommentPost();
             $post->discussion_id = $this->discussionId;
             $post->created_at = Carbon::now();
@@ -117,6 +128,22 @@ class Reply extends AbstractJob
             $post->content = $content;
 
             $post->save();
+
+            // CommentPost::boot() raises a Posted event during save (its
+            // creating observer) and leaves it pending on the model. The API
+            // layer releases those events via HasHooks::dispatchEventsFor();
+            // a queue job must do it itself, so that core listeners update the
+            // discussion (comment_count, last post, participant count), the
+            // assistant's stats, and subscribers receive notifications. The
+            // assistant user is passed as the actor — the same semantics a
+            // user-authored post has.
+            foreach ($post->releaseEvents() as $event)
+            {
+                if (property_exists($event, 'actor') && !$event->actor)
+                    $event->actor = $assistant;
+
+                $events->dispatch($event);
+            }
 
             $replyOnDiscussionStart = $settings->get('stezkoy-ai-openreply.enable_on_discussion_started', true);
 

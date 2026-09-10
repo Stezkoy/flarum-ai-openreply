@@ -227,6 +227,60 @@ class OpencodeClient
     }
 
     /**
+     * Bounded bulk variant of deleteSession() for the admin "close all
+     * sessions" action, which runs inside a single web request: each DELETE
+     * gets a short timeout, there are NO retries, and the loop stops at the
+     * first failed call or when the time budget runs out — so a wedged
+     * server cannot stall the admin request. A 404 counts as deleted: the
+     * session is already gone.
+     *
+     * @return array{deleted: string[], stoppedEarly: bool}
+     */
+    public function deleteSessions(array $sessionIds, float $timeBudgetSeconds = 20.0, int $perCallTimeout = 15): array
+    {
+        if ($this->client === null)
+            return ['deleted' => [], 'stoppedEarly' => true];
+
+        $deleted = [];
+        $deadline = microtime(true) + $timeBudgetSeconds;
+
+        foreach ($sessionIds as $sessionId)
+        {
+            if (!is_string($sessionId) || $sessionId === '')
+                continue;
+
+            if (microtime(true) >= $deadline)
+                return ['deleted' => $deleted, 'stoppedEarly' => true];
+
+            try {
+                $response = $this->client->request('DELETE', $this->url.'/session/'.rawurlencode($sessionId), [
+                    RequestOptions::TIMEOUT => $perCallTimeout,
+                ]);
+
+                $status = $response->getStatusCode();
+
+                // The session is already gone — as good as deleted.
+                if ($status === 404)
+                {
+                    $deleted[] = $sessionId;
+                    continue;
+                }
+
+                if ($status >= 400)
+                    return ['deleted' => $deleted, 'stoppedEarly' => true];
+
+                $deleted[] = $sessionId;
+            } catch (\Throwable $e) {
+                // Transport failure (connection refused, timeout, ...):
+                // deleting the rest is pointless until the server is back.
+                return ['deleted' => $deleted, 'stoppedEarly' => true];
+            }
+        }
+
+        return ['deleted' => $deleted, 'stoppedEarly' => false];
+    }
+
+    /**
      * Returns the agents currently known to the opencode server (GET /agent),
      * or null when the server is unreachable. Each entry has at least a "name".
      */

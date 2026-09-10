@@ -385,8 +385,20 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
       method: 'POST',
       errorHandler: () => {},
     })
-      .then(() => {
-        this.statusMessage = app.translator.trans(PREFIX + '.admin.settings.sessions_closed');
+      .then((data) => {
+        const closed = data.closed ?? 0;
+        const remaining = data.remaining ?? 0;
+
+        if (closed === 0 && data.stoppedEarly) {
+          this.statusMessage = app.translator.trans(PREFIX + '.admin.settings.sessions_close_fail');
+        } else if (remaining > 0) {
+          this.statusMessage = app.translator.trans(PREFIX + '.admin.settings.sessions_closed_partial', {
+            count: closed,
+            remaining,
+          });
+        } else {
+          this.statusMessage = app.translator.trans(PREFIX + '.admin.settings.sessions_closed');
+        }
       })
       .catch(() => {
         this.statusMessage = app.translator.trans(PREFIX + '.admin.settings.sessions_close_fail');
