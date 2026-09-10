@@ -80,7 +80,7 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
               type: 'number',
               required: true,
             }),
-            this._group('user_prompt_badge_label', 'user_prompt_badge_help', 'input', 'user_prompt_badge_text'),
+            this._badgeGroup(),
             this._switchGroup(),
             this._tagsGroup(),
           ]),
@@ -258,6 +258,34 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
     ]);
   }
 
+  _badgeGroup() {
+    const badgeEnabled = this.setting(PREFIX + '.user_prompt_badge_enabled', '1')() === '1';
+
+    return m('.Form-group', [
+      m(
+        Switch,
+        {
+          state: badgeEnabled,
+          onchange: (value) => {
+            this.setting(PREFIX + '.user_prompt_badge_enabled')(value ? '1' : '');
+          },
+        },
+        app.translator.trans(PREFIX + '.admin.settings.user_prompt_badge_enable_label')
+      ),
+      m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.user_prompt_badge_enable_help')),
+      badgeEnabled
+        ? [
+            m('input.FormControl', {
+              type: 'text',
+              bidi: this.setting(PREFIX + '.user_prompt_badge_text', this._default('user_prompt_badge_text')),
+              placeholder: 'Assistant',
+            }),
+            m('p.helpText', app.translator.trans(PREFIX + '.admin.settings.user_prompt_badge_help')),
+          ]
+        : null,
+    ]);
+  }
+
   _switchGroup() {
     const onDiscussionStart = this.setting(PREFIX + '.enable_on_discussion_started', '1')() === '1';
 
@@ -323,6 +351,7 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
       model: '',
       user_prompt: '',
       user_prompt_badge_text: 'Assistant',
+      user_prompt_badge_enabled: '1',
       enable_on_discussion_started: '1',
       max_active_sessions: '10',
       max_messages_per_session: '15',

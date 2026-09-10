@@ -165,7 +165,7 @@ In the extension's admin settings page:
 - **System prompt (persona)** — optional free-text instructions for the assistant's behavior, sent with every message (this is what makes "call yourself Pupsik" type personas work without editing the server config).
 - **Model** — the model to use, in `provider/model` format (e.g. `opencode/big-pickle`). Type it manually, or click **Get free models** to fetch the currently available free models from your opencode server and click one to fill the field. Leave empty to use the server's default model. This is independent of the agent: the agent fixes *how* it behaves, the model fixes *which* AI answers.
 - **User assistant** — the user ID of the account that posts the AI replies (required).
-- **User assistant badge** — the text shown below the assistant's posts.
+- **User assistant badge** — a toggle plus the text shown in the badge below the assistant's posts. Disabled or empty — no badge is rendered.
 - **Enable on discussion start** — when enabled, the AI replies only when a discussion is started. When disabled, the discussion becomes a chat between the OP and the assistant.
 - **Tags** — restrict the assistant to specific tags.
 - **Actions** — three buttons: **Check connection** (server health + current model), **Count sessions** (total sessions on the server and how many belong to this extension), and **Close all sessions** (closes this extension's sessions in bounded batches — if some remain, click again; other server sessions are left untouched).

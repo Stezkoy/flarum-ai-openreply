@@ -40,12 +40,14 @@ return [
         ->default('stezkoy-ai-openreply.enable_on_discussion_started', true)
         ->default('stezkoy-ai-openreply.reply_to_all_in_discussion', false)
         ->default('stezkoy-ai-openreply.user_prompt_badge_text', 'Assistant')
+        ->default('stezkoy-ai-openreply.user_prompt_badge_enabled', true)
         ->default('stezkoy-ai-openreply.max_active_sessions', 10)
         ->default('stezkoy-ai-openreply.max_messages_per_session', 15)
         ->default('stezkoy-ai-openreply.session_ttl_days', 3)
         ->default('stezkoy-ai-openreply.retry_attempts', 1)
         ->default('stezkoy-ai-openreply.retry_delay_seconds', 1)
         ->serializeToForum('aiAssistantUserId', 'stezkoy-ai-openreply.user_prompt')
+        ->serializeToForum('aiAssistantBadgeEnabled', 'stezkoy-ai-openreply.user_prompt_badge_enabled', fn($value) => $value === '1' || $value === 1 || $value === true)
         ->serializeToForum('aiAssistantBadgeText', 'stezkoy-ai-openreply.user_prompt_badge_text'),
 
     new Extend\Routes('api')

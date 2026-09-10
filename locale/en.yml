@@ -26,8 +26,9 @@ stezkoy-ai-openreply:
       model_load_fail: Could not load the model list from the opencode server. Check the connection and try again.
       user_prompt_label: User assistant
       user_prompt_help: Enter the user id that will be used to generate AI responses.
-      user_prompt_badge_label: User assistant badge
-      user_prompt_badge_help: Text that will be displayed below the assistant user.
+      user_prompt_badge_enable_label: Show assistant badge
+      user_prompt_badge_enable_help: When enabled, a badge appears under the assistant's username with the text below. When disabled, no badge is shown.
+      user_prompt_badge_help: Text shown in the badge under the assistant user. If left empty while the badge is on, the badge is hidden.
       enable_on_discussion_started_label: Enable on discussion start
       enable_on_discussion_started_help: When enabled, AI replies only at discussion start. When disabled, the discussion becomes a chat; the assistant answers posts and can be set to reply to everyone below.
       reply_to_all_label: Reply to all participants
