@@ -2,6 +2,7 @@
 
 namespace Stezkoy\FlarumAIOpenReply\Listeners;
 
+use Flarum\Discussion\Discussion;
 use Flarum\Post\Event\Posted;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\User;
@@ -91,10 +92,31 @@ class ReplyOnPost
         $this->queue->push(new Reply(
             $discussion->id,
             $assistantId,
-            (string)$event->post->content,
+            $this->buildContext($discussion, (string)$event->post->content),
             $discussion->title,
             $timeout,
         ));
+    }
+
+    private function buildContext(Discussion $discussion, string $content): string
+    {
+        $lines = [];
+
+        if ($discussion->title !== '')
+            $lines[] = '[Discussion: '.$discussion->title.']';
+
+        if (class_exists('Flarum\Tags\Tag') && $discussion->tags !== null)
+        {
+            $names = Arr::pluck($discussion->tags, 'name');
+
+            if ($names !== [])
+                $lines[] = '[Tags: '.implode(', ', $names).']';
+        }
+
+        if ($lines === [])
+            return $content;
+
+        return implode("\n", $lines)."\n\n".$content;
     }
 
     /**
