@@ -29,7 +29,7 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
           ]),
           this._section('connection_section', [
             this._group('opencode_url_label', 'opencode_url_help', 'input', 'opencode_url', {
-              placeholder: 'http://localhost:4096',
+              placeholder: 'http://localhost:49374',
             }),
             this._group('opencode_username_label', 'opencode_username_help', 'input', 'opencode_username', {
               placeholder: 'opencode',
@@ -343,7 +343,7 @@ export default class AIOpenReplySettingsPage extends ExtensionPage {
 
   _default(setting) {
     const defaults = {
-      opencode_url: 'http://localhost:4096',
+      opencode_url: 'http://localhost:49374',
       opencode_username: 'opencode',
       opencode_password: '',
       opencode_agent: '',

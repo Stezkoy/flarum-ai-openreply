@@ -35,7 +35,7 @@ return [
     new Extend\Locales(__DIR__.'/locale'),
 
     new Extend\Settings()
-        ->default('stezkoy-ai-openreply.opencode_url', 'http://localhost:4096')
+        ->default('stezkoy-ai-openreply.opencode_url', 'http://localhost:49374')
         ->default('stezkoy-ai-openreply.opencode_username', 'opencode')
         ->default('stezkoy-ai-openreply.enable_on_discussion_started', true)
         ->default('stezkoy-ai-openreply.reply_to_all_in_discussion', false)

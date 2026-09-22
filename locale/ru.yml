@@ -5,7 +5,7 @@ stezkoy-ai-openreply:
       model_section: Модель и персона
       trigger_section: Триггер ответа
       opencode_url_label: URL opencode-сервера
-      opencode_url_help: "Адрес вашего headless-сервера opencode. Запустите его командой <code>opencode serve</code> (порт по умолчанию 4096)."
+      opencode_url_help: "Адрес вашего headless-сервера opencode. Запустите его командой <code>opencode serve</code> (порт по умолчанию 49374)."
       opencode_intro: "OpenCode — это опенсорсный ИИ-агент для написания кода, работающий локально в терминале. Именно он генерирует AI-ответы этого расширения. Зайдите на сайт, чтобы узнать больше и настроить его на своём сервере."
       opencode_username_label: Логин opencode-сервера
       opencode_username_help: "Логин для basic-аутентификации. По умолчанию <code>opencode</code>, если оставить пустым."
@@ -15,7 +15,7 @@ stezkoy-ai-openreply:
       opencode_agent_default_option: — по умолчанию —
       opencode_agent_help: "Готовый пресет, задающий стиль ответа. build — отвечает сразу; plan — сначала обдумывает. Оба входят в opencode; оставьте «по умолчанию» для простого прямого ответа."
       opencode_system_prompt_label: Системный промпт (персона)
-      opencode_system_prompt_help: "Необязательно: свободный текст с инструкциями о поведении ассистента, отправляется с каждым сообщением."
+      opencode_system_prompt_help: "Необязательно: свободный текст с инструкциями о поведении ассистента (персона). Хранится в сессии opencode каждого обсуждения и попадает в контекст модели."
       opencode_system_prompt_placeholder: "Например: «Называй себя Пупсик и отвечай по-русски»"
       model_label: Модель
       model_help: "Укажите <code>провайдер/модель</code> (например <code>opencode/big-pickle</code>). Оставьте пустым, чтобы использовать модель сервера по умолчанию."

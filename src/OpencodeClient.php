@@ -8,14 +8,19 @@ use GuzzleHttp\RequestOptions;
 use Psr\Log\LoggerInterface;
 
 /**
- * Talks to a headless `opencode serve` HTTP server (opencode 1.x API).
+ * Talks to a headless `opencode serve` HTTP server (opencode 2.x JSON API
+ * under /api/*).
  *
- * A session is created with only `{ parentID?, title? }`. The agent and
- * model are applied per-message on `POST /session/:id/message` (agent as a
- * string, model as `{ providerID, modelID }`), so new discussions pick up
- * the latest settings.
+ * Each discussion gets its own session, created with `{ title?, agent?,
+ * model? }`. The agent (an id from GET /api/agent) and the model
+ * (`{ id, providerID }`) come from the extension settings; before every
+ * prompt they are synced to the session, so the latest settings always apply.
  *
- * @see https://opencode.ai/docs/server/
+ * A reply is produced asynchronously: the prompt is queued with
+ * POST /api/session/:id/prompt, the server is asked to block until the
+ * session is idle again, and the latest assistant message is read back.
+ *
+ * @see https://opencode.ai/v2/docs/server/
  */
 class OpencodeClient
 {
@@ -27,7 +32,7 @@ class OpencodeClient
         protected SettingsRepositoryInterface $settings,
         protected LoggerInterface $logger
     ) {
-        $url = (string)$this->settings->get('stezkoy-ai-openreply.opencode_url', 'http://localhost:4096');
+        $url = (string)$this->settings->get('stezkoy-ai-openreply.opencode_url', 'http://localhost:49374');
 
         if (empty($url)) {
             $this->logger->error('[AI Open-Reply] opencode server URL is not configured.');
@@ -56,9 +61,26 @@ class OpencodeClient
         if ($this->client === null)
             return null;
 
-        $payload = $this->requestJson('POST', '/session', ['title' => $title]);
+        $body = ['title' => $title];
 
-        return $payload['id'] ?? null;
+        $agent = $this->resolveAgent((string)$this->settings->get('stezkoy-ai-openreply.opencode_agent', ''));
+
+        if ($agent !== '')
+            $body['agent'] = $agent;
+
+        $model = $this->parseModel($this->configuredModel());
+
+        if ($model !== null)
+            $body['model'] = $model;
+
+        $payload = $this->requestJson('POST', '/api/session', $body);
+
+        $sessionId = $payload['data']['id'] ?? null;
+
+        if ($sessionId !== null && (string)$this->settings->get('stezkoy-ai-openreply.opencode_system_prompt', '') !== '')
+            $this->syncPersona($sessionId);
+
+        return $sessionId;
     }
 
     public function health(): bool
@@ -66,9 +88,31 @@ class OpencodeClient
         if ($this->client === null)
             return false;
 
-        $payload = $this->requestJson('GET', '/global/health', []);
+        return $this->requestJson('GET', '/api/info', []) !== null;
+    }
 
-        return is_array($payload) && !empty($payload['healthy']);
+    /**
+     * Returns the model the opencode server uses by default, as
+     * `providerID/modelID`, or null when the server is unreachable.
+     */
+    public function serverDefaultModel(): ?string
+    {
+        if ($this->client === null)
+            return null;
+
+        $payload = $this->requestJson('GET', '/api/model/default', []);
+        $model = $payload['data'] ?? null;
+
+        if (!is_array($model))
+            return null;
+
+        $provider = (string)($model['providerID'] ?? '');
+        $id = (string)($model['id'] ?? '');
+
+        if ($provider === '' || $id === '')
+            return null;
+
+        return $provider.'/'.$id;
     }
 
     public function configuredModel(): string
@@ -77,32 +121,16 @@ class OpencodeClient
     }
 
     /**
-     * Returns the `GET /provider` payload (connected providers + default models),
-     * or null when the server is unreachable.
+     * Returns a flat list of free models known to the opencode server, or
+     * null when the server is unreachable.
      *
-     * @return array{all?: array, default?: array, connected?: array}|null
-     */
-    public function providers(): ?array
-    {
-        if ($this->client === null)
-            return null;
-
-        return $this->requestJson('GET', '/provider', []);
-    }
-
-    /**
-     * Returns a flat list of free models contributed by the connected
-     * providers, or null when the server is unreachable.
-     *
-     * The list is derived from `GET /provider`: only providers whose auth
-     * currently works (`connected`) are included, and only models whose
-     * cost is zero on both input and output. Each entry is:
+     * The list is derived from `GET /api/model` plus `GET /api/model/default`.
+     * Only models advertised with no cost on any tier are included. Each
+     * entry is:
      *
      *     ['id' => 'provider/model', 'name' => ..., 'status' => ..., 'isDefault' => bool]
      *
-     * "isDefault" marks the model the opencode server uses by default for its
-     * provider. The server default (`'provider'/modelId` of the first provider
-     * that declares one) is returned as "default".
+     * "isDefault" marks the server's default model (from /api/model/default).
      *
      * @return array{models?: array<int, array{id: string, name: string, status: string, isDefault: bool}>, reachable?: bool, default?: ?string}|null
      */
@@ -111,47 +139,36 @@ class OpencodeClient
         if ($this->client === null)
             return null;
 
-        $payload = $this->requestJson('GET', '/provider', []);
+        $payload = $this->requestJson('GET', '/api/model', []);
 
-        if ($payload === null)
+        if ($payload === null || !is_array($payload['data'] ?? null))
             return null;
 
-        $defaults = $payload['default'] ?? [];
-        $connected = $payload['connected'] ?? [];
-        $all = $payload['all'] ?? [];
-
-        if (!is_array($defaults) || !is_array($connected) || !is_array($all))
-            return null;
+        $default = $this->serverDefaultModel() ?? '';
 
         $models = [];
 
-        foreach ($all as $provider) {
-            if (!is_array($provider))
+        foreach ($payload['data'] as $model) {
+            if (!is_array($model) || !$this->isFreeModel($model))
                 continue;
 
-            $providerId = $provider['id'] ?? null;
-            $providerModels = $provider['models'] ?? [];
+            $providerId = (string)($model['providerID'] ?? '');
+            $modelId = (string)($model['id'] ?? '');
 
-            if (!is_string($providerId) || !is_array($providerModels))
+            if ($providerId === '' || $modelId === '')
                 continue;
 
-            if (!in_array($providerId, $connected, true))
-                continue;
+            $id = $providerId.'/'.$modelId;
 
-            foreach ($providerModels as $modelId => $model) {
-                if (!is_array($model) || !$this->isFreeModel($model))
-                    continue;
-
-                $models[] = [
-                    'id' => $providerId.'/'.$modelId,
-                    'name' => (string)($model['name'] ?? $modelId),
-                    'status' => (string)($model['status'] ?? 'active'),
-                    'isDefault' => ($defaults[$providerId] ?? null) === $modelId,
-                ];
-            }
+            $models[] = [
+                'id' => $id,
+                'name' => (string)($model['name'] ?? $modelId),
+                'status' => (string)($model['status'] ?? 'active'),
+                'isDefault' => $id === $default,
+            ];
         }
 
-        // Deterministic order: the provider's default first, then alphabetical.
+        // Deterministic order: the server default first, then alphabetical.
         usort($models, function (array $a, array $b): int {
             if ($a['isDefault'] !== $b['isDefault'])
                 return $a['isDefault'] ? -1 : 1;
@@ -159,27 +176,16 @@ class OpencodeClient
             return strcmp($a['id'], $b['id']);
         });
 
-        $default = null;
-
-        foreach ($defaults as $providerId => $modelId) {
-            if (!in_array($providerId, $connected, true))
-                continue;
-
-            if (is_string($providerId) && is_string($modelId) && $modelId !== '') {
-                $default = $providerId.'/'.$modelId;
-                break;
-            }
-        }
-
         return [
             'models' => $models,
             'reachable' => true,
-            'default' => $default,
+            'default' => $default !== '' ? $default : null,
         ];
     }
 
     /**
-     * A model is treated as free when both its input and output cost are zero.
+     * A model is treated as free when it has no cost tiers, or every tier is
+     * free on both input and output (opencode 2.x reports cost as a list).
      */
     private function isFreeModel(array $model): bool
     {
@@ -188,13 +194,24 @@ class OpencodeClient
         if (!is_array($cost))
             return false;
 
-        $input = $cost['input'] ?? null;
-        $output = $cost['output'] ?? null;
+        if ($cost === [])
+            return true;
 
-        if (!is_numeric($input) || !is_numeric($output))
-            return false;
+        foreach ($cost as $tier) {
+            if (!is_array($tier))
+                return false;
 
-        return (float)$input === 0.0 && (float)$output === 0.0;
+            $input = $tier['input'] ?? null;
+            $output = $tier['output'] ?? null;
+
+            if (!is_numeric($input) || !is_numeric($output))
+                return false;
+
+            if ((float)$input !== 0.0 || (float)$output !== 0.0)
+                return false;
+        }
+
+        return true;
     }
 
     /**
@@ -207,9 +224,9 @@ class OpencodeClient
         if ($this->client === null)
             return null;
 
-        $payload = $this->requestJson('GET', '/session', []);
+        $payload = $this->requestJson('GET', '/api/session', []);
 
-        return is_array($payload) ? count($payload) : null;
+        return is_array($payload['data'] ?? null) ? count($payload['data']) : null;
     }
 
     public function deleteSession(string $sessionId): bool
@@ -219,9 +236,9 @@ class OpencodeClient
 
         // A 404 just means the session is already gone (e.g. it was closed by a
         // TTL/limit or externally), which is normal and not worth logging as an error.
-        // The endpoint also returns a bare `true` on success instead of JSON, which
-        // requestJson() tolerates when $soft is enabled.
-        $this->requestJson('DELETE', '/session/'.rawurlencode($sessionId), [], true);
+        // The endpoint returns 204 with an empty body on success, which requestJson()
+        // tolerates when $soft is enabled.
+        $this->requestJson('DELETE', '/api/session/'.rawurlencode($sessionId), [], true);
 
         return true;
     }
@@ -253,7 +270,7 @@ class OpencodeClient
                 return ['deleted' => $deleted, 'stoppedEarly' => true];
 
             try {
-                $response = $this->client->request('DELETE', $this->url.'/session/'.rawurlencode($sessionId), [
+                $response = $this->client->request('DELETE', $this->url.'/api/session/'.rawurlencode($sessionId), [
                     RequestOptions::TIMEOUT => $perCallTimeout,
                 ]);
 
@@ -281,16 +298,18 @@ class OpencodeClient
     }
 
     /**
-     * Returns the agents currently known to the opencode server (GET /agent),
-     * or null when the server is unreachable. Each entry has at least a "name".
+     * Returns the agents currently known to the opencode server (GET /api/agent),
+     * or null when the server is unreachable. Each entry has at least an "id".
      */
     public function agents(): ?array
     {
         if ($this->client === null)
             return null;
 
-        if ($this->agents === null)
-            $this->agents = $this->requestJson('GET', '/agent', []);
+        if ($this->agents === null) {
+            $payload = $this->requestJson('GET', '/api/agent', []);
+            $this->agents = is_array($payload['data'] ?? null) ? $payload['data'] : [];
+        }
 
         return $this->agents;
     }
@@ -300,36 +319,127 @@ class OpencodeClient
         if ($this->client === null)
             return null;
 
-        $path = '/session/'.rawurlencode($sessionId).'/message';
+        $escaped = rawurlencode($sessionId);
 
-        $body = [
-            'parts' => [
-                ['type' => 'text', 'text' => $text],
-            ],
-        ];
+        $this->syncSessionConfig($sessionId);
+
+        $prompt = $this->requestJson('POST', '/api/session/'.$escaped.'/prompt', ['text' => $text]);
+
+        if ($prompt === null)
+            return null;
+
+        $this->waitForIdle($sessionId);
+
+        $messages = $this->requestJson('GET', '/api/session/'.$escaped.'/message', []);
+
+        return $messages === null ? null : $this->extractText($messages);
+    }
+
+    /**
+     * Keeps the session's agent and model in line with the current settings
+     * (opencode 2.x applies them per session, not per message, so they are
+     * bumped here when an admin changes them between replies).
+     */
+    private function syncSessionConfig(string $sessionId): void
+    {
+        $info = $this->requestJson('GET', '/api/session/'.rawurlencode($sessionId), []);
+
+        if ($info === null || !is_array($info['data'] ?? null))
+            return;
+
+        $data = $info['data'];
+
+        $model = $this->parseModel($this->configuredModel());
+
+        if ($model !== null) {
+            $currentId = is_array($data['model'] ?? null) ? (string)($data['model']['id'] ?? '') : '';
+            $currentProvider = is_array($data['model'] ?? null) ? (string)($data['model']['providerID'] ?? '') : '';
+
+            if ($currentId !== $model['id'] || $currentProvider !== $model['providerID']) {
+                $this->requestJson('POST', '/api/session/'.rawurlencode($sessionId).'/model', ['model' => $model]);
+            }
+        }
 
         $agent = $this->resolveAgent((string)$this->settings->get('stezkoy-ai-openreply.opencode_agent', ''));
-        $model = $this->parseModel($this->configuredModel());
-        $system = (string)$this->settings->get('stezkoy-ai-openreply.opencode_system_prompt', '');
 
-        if ($agent !== '')
-            $body['agent'] = $agent;
+        if ($agent !== '' && (string)($data['agent'] ?? '') !== $agent) {
+            $this->requestJson('POST', '/api/session/'.rawurlencode($sessionId).'/agent', ['agent' => $agent]);
+        }
 
-        if ($model !== null)
-            $body['model'] = $model;
+        $this->syncPersona($sessionId);
+    }
 
-        if ($system !== '')
-            $body['system'] = $system;
+    /**
+     * Keeps the session's persona (the admin's system-prompt setting) in line
+     * with the current settings. opencode 2.x stores such instructions per
+     * session via the experimental instructions-entries API and feeds them to
+     * the model as part of its context — so each discussion can carry its own
+     * persona without touching the server config.
+     */
+    private function syncPersona(string $sessionId): void
+    {
+        $persona = (string)$this->settings->get('stezkoy-ai-openreply.opencode_system_prompt', '');
+        $escaped = rawurlencode($sessionId);
 
-        $payload = $this->requestJson('POST', $path, $body);
+        if ($persona !== '') {
+            $this->requestJson('PUT', '/api/experimental/session/'.$escaped.'/instructions/entries/persona', ['value' => $persona], true);
+            return;
+        }
 
-        return $payload === null ? null : $this->extractText($payload);
+        // Persona cleared: drop the entry if it exists (a missing key is a
+        // benign 404, which the soft call tolerates).
+        $this->requestJson('DELETE', '/api/experimental/session/'.$escaped.'/instructions/entries/persona', [], true);
+    }
+
+    /**
+     * Blocks until the session finished processing the current prompt. The
+     * wait endpoint is the normal path; if it is unavailable (it is
+     * experimental), fall back to a bounded poll of the message list.
+     */
+    private function waitForIdle(string $sessionId): void
+    {
+        $escaped = rawurlencode($sessionId);
+
+        $wait = $this->requestJson('POST', '/api/experimental/session/'.$escaped.'/wait', []);
+
+        if ($wait !== null)
+            return;
+
+        for ($i = 0; $i < 24; $i++) {
+            $this->sleep(5);
+
+            $messages = $this->requestJson('GET', '/api/session/'.$escaped.'/message', []);
+
+            if ($messages !== null && $this->assistantFinished($messages))
+                return;
+        }
+    }
+
+    private function assistantFinished(array $payload): bool
+    {
+        $messages = $payload['data'] ?? null;
+
+        if (!is_array($messages))
+            return false;
+
+        foreach ($messages as $message) {
+            if (!is_array($message))
+                continue;
+
+            if (($message['type'] ?? null) !== 'assistant')
+                continue;
+
+            if (is_string($message['finish'] ?? null) && $message['finish'] !== '')
+                return true;
+        }
+
+        return false;
     }
 
     /**
      * The opencode server only knows agents defined in its config (opencode.json).
-     * An unknown name makes it reject the whole message with HTTP 500, so we check
-     * the name against GET /agent and fall back to the default agent if it is not
+     * An unknown name makes it reject the whole prompt, so we check the id
+     * against GET /api/agent and fall back to the default agent if it is not
      * among the known ones.
      */
     private function resolveAgent(string $agent): string
@@ -347,12 +457,12 @@ class OpencodeClient
 
         foreach ($known as $candidate)
         {
-            if (($candidate['name'] ?? null) === $agent)
+            if (($candidate['id'] ?? null) === $agent)
                 return $agent;
         }
 
         $this->logger->warning(
-            '[AI Open-Reply] Agent "'.$agent.'" is not defined on the opencode server (see GET /agent); using the default agent.'
+            '[AI Open-Reply] Agent "'.$agent.'" is not defined on the opencode server (see GET /api/agent); using the default agent.'
         );
 
         return '';
@@ -386,7 +496,8 @@ class OpencodeClient
             return null;
         }
 
-        return ['providerID' => $parts[0], 'modelID' => $parts[1]];
+        // opencode 2.x identifies a model as `{ id, providerID }`.
+        return ['id' => $parts[1], 'providerID' => $parts[0]];
     }
 
     private function requestJson(string $method, string $path, array $body, bool $soft = false): ?array
@@ -396,11 +507,27 @@ class OpencodeClient
 
         for ($attempt = 1; $attempt <= $attempts; $attempt++) {
             try {
-                $response = $this->client->request($method, $this->url.$path, [
-                    RequestOptions::JSON => $body,
-                ]);
+                $options = [];
+
+                if ($body !== [])
+                    $options[RequestOptions::JSON] = $body;
+
+                $response = $this->client->request($method, $this->url.$path, $options);
 
                 $status = $response->getStatusCode();
+
+                // The v2 API answers 2xx-only endpoints (DELETE, PATCH, the
+                // wait polling hook) with 204 and an empty body.
+                if ($status === 204)
+                    return ['ok' => true];
+
+                if ($status === 401 && $attempt < $attempts) {
+                    // Transient 401s right after the server starts up are a
+                    // known opencode quirk; retry like any other hiccup.
+                    $this->logger->warning("[AI Open-Reply] opencode {$method} {$path} returned 401; retrying {$attempt}/{$attempts}...");
+                    $this->sleep($delay);
+                    continue;
+                }
 
                 if ($status >= 400) {
                     if ($soft && $status === 404) {
@@ -419,7 +546,7 @@ class OpencodeClient
                         return null;
                     }
 
-                    // 4xx client errors are not retryable, but we still log them.
+                    // Other 4xx client errors are not retryable, but we still log them.
                     $errorBody = (string)$response->getBody();
                     $this->logger->error("[AI Open-Reply] opencode {$method} {$path} failed ({$status}): ".$errorBody);
                     return null;
@@ -430,13 +557,6 @@ class OpencodeClient
                 $json = json_decode($responseBody, true);
 
                 if (!is_array($json)) {
-                    // Some endpoints (e.g. DELETE /session/:id) return a bare
-                    // boolean on success instead of JSON. Only endpoints that
-                    // opt in via $soft may return a non-object body.
-                    if ($soft && is_bool($json)) {
-                        return ['ok' => $json];
-                    }
-
                     $preview = mb_substr(trim(preg_replace('/\s+/', ' ', $responseBody)), 0, 500);
                     $this->logger->error(
                         '[AI Open-Reply] opencode responded with an invalid JSON payload (status '.$status.'). Body: '
@@ -467,15 +587,46 @@ class OpencodeClient
             usleep($seconds * 1000000);
     }
 
+    /**
+     * Extracts the assistant's newest text reply from a
+     * GET /api/session/:id/message payload (`{ data: [...] }`).
+     */
     private function extractText(array $payload): ?string
     {
-        $parts = $payload['parts'] ?? [];
+        $messages = $payload['data'] ?? null;
+
+        if (!is_array($messages))
+            return null;
+
+        $latest = null;
+        $latestCreated = -1.0;
+
+        foreach ($messages as $message) {
+            if (!is_array($message))
+                continue;
+
+            if (($message['type'] ?? null) !== 'assistant')
+                continue;
+
+            $time = $message['time'] ?? null;
+            $created = is_array($time) ? (float)($time['created'] ?? 0) : 0.0;
+
+            if ($created >= $latestCreated) {
+                $latest = $message;
+                $latestCreated = $created;
+            }
+        }
+
+        if ($latest === null)
+            return null;
+
         $texts = [];
 
-        foreach ($parts as $part) {
-            if (($part['type'] ?? null) !== 'text')
+        foreach (($latest['content'] ?? []) as $part) {
+            if (!is_array($part))
                 continue;
-            if (!empty($part['synthetic']))
+
+            if (($part['type'] ?? null) !== 'text')
                 continue;
 
             $text = trim((string)($part['text'] ?? ''));
