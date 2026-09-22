@@ -280,6 +280,8 @@ Also grant the "Use AI assistant" permission to the desired user groups.
 
 ## Updating
 
+> **Important:** version 3.x works **only** with the opencode **v2** server. Before updating, make sure your opencode server is v2 (JSON API under `/api/*`, default port `49374`). The opencode 1.x server API is no longer supported.
+
 ```sh
 composer update stezkoy/flarum-ai-openreply
 php flarum migrate

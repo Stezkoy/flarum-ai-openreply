@@ -280,6 +280,8 @@ opencode — это локальная среда исполнения LLM-аг�
 
 ## Обновление
 
+> **Важно:** версия 3.x работает **только** с сервером opencode **v2**. Перед обновлением убедитесь, что ваш сервер opencode — v2 (JSON API под `/api/*`, порт по умолчанию `49374`). Серверный API opencode 1.x больше не поддерживается.
+
 ```sh
 composer update stezkoy/flarum-ai-openreply
 php flarum migrate
