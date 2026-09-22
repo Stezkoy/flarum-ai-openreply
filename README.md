@@ -130,6 +130,83 @@ sudo systemctl status opencode
 
 > The `User=opencode` account stores its own provider credentials and session data. Add `Environment=OPENCODE_SERVER_USERNAME=...` if you changed the basic auth username.
 
+### Running with Docker Compose (opencode v2)
+
+The easiest way to run the opencode server on a separate machine (for example, a VPS) is Docker. Official images are published on GHCR as `ghcr.io/anomalyco/opencode`; at the time of writing the `latest` tag points to the **v2** server (versioned tags such as `:2.0.0` are published as releases roll out).
+
+> Compatibility note: this extension currently talks to the opencode **1.x** server API. v2 server support is planned — once released, you can point it at a v2 server set up like this.
+
+1. On the VPS, install Docker Engine with the Compose plugin, then create the project directory:
+
+```sh
+sudo mkdir -p /opt/opencode && cd /opt/opencode
+```
+
+2. Create `compose.yaml`:
+
+```yaml
+services:
+  opencode:
+    image: ghcr.io/anomalyco/opencode:latest
+    container_name: opencode
+    restart: unless-stopped
+    ports:
+      - "49374:49374"
+    environment:
+      OPENCODE_SERVER_PASSWORD: "${OPENCODE_SERVER_PASSWORD:?set it in .env}"
+    volumes:
+      - opencode-config:/root/.config/opencode
+      - opencode-data:/root/.local/share/opencode
+      - opencode-workspace:/workspace
+    working_dir: /workspace
+    command: ["serve", "--hostname", "0.0.0.0", "--port", "49374"]
+
+volumes:
+  opencode-config:
+  opencode-data:
+  opencode-workspace:
+```
+
+3. Create `.env` next to it with the basic auth password:
+
+```sh
+OPENCODE_SERVER_PASSWORD=your-strong-password
+```
+
+4. Start the server, check the logs, and log into your AI provider (interactive, once):
+
+```sh
+sudo docker compose up -d
+sudo docker compose logs -f opencode   # confirm the server is up (Ctrl+C to exit)
+sudo docker compose exec -it opencode opencode auth login
+```
+
+What this does:
+
+- The container runs `opencode serve --hostname 0.0.0.0 --port 49374` — it listens on all interfaces on port `49374`, with basic auth enabled via `OPENCODE_SERVER_PASSWORD` (username `opencode`).
+- The `opencode-config` and `opencode-data` volumes persist your provider credentials (`auth.json`) and all discussion sessions on the VPS. **They survive `docker compose down` and image upgrades; only `docker compose down -v` deletes them** — don't run that if you want to keep sessions.
+- `opencode-workspace` is mounted as `/workspace` (`working_dir`) — the project the server reports to the API.
+
+Then point the extension's admin settings at the server:
+
+- **opencode server URL** — `http://<vps-ip>:49374` (replace `<vps-ip>` with the VPS address)
+- **opencode server username** — `opencode`
+- **opencode server password** — the value of `OPENCODE_SERVER_PASSWORD`
+
+Security:
+
+- Open the port only to the host running Flarum: `sudo ufw allow from <flarum-ip> to any port 49374 proto tcp`. Basic auth alone does not protect against brute-force password guessing, and the API can spend money generating replies.
+- Prefer TLS in front of it (Caddy/Nginx reverse proxy) if the VPS is reachable from the internet.
+- `--cors` is not needed — the extension calls the API from PHP, not from a browser.
+
+Upgrading:
+
+```sh
+cd /opt/opencode && sudo docker compose pull && sudo docker compose up -d
+```
+
+Sessions and credentials survive the upgrade because they live in the volumes above.
+
 ## Server recommendations
 
 opencode is a local LLM agent runtime: it loads the model, keeps the full conversation (and often the context window) in memory, and may spawn long-running background tasks. The headless server used by this extension is no exception, so plan its resources accordingly.
