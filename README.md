@@ -8,6 +8,8 @@ Automatically replies to new discussions (or to every post made by the original 
 
 Each discussion gets its own persistent opencode session, so the assistant keeps full context of the conversation. The assistant's reply is inserted into the thread as a text post.
 
+> **opencode v2 required.** Starting with version 3.0.0 this extension works **only** with the opencode **v2** server (`opencode serve`, API under `/api/*`). The opencode v1 server API is no longer supported. See the server setup below.
+
 A fork of `michaelbelgium/flarum-ai-autoreply`, reworked to work with the opencode v2 server API.
 
 ## Requirements
@@ -133,7 +135,7 @@ sudo systemctl status opencode
 
 ### Running with Docker Compose
 
-The easiest way to run the opencode server on a separate machine (for example, a VPS) is Docker. Official images are published on GHCR as `ghcr.io/anomalyco/opencode`; at the time of writing the `latest` tag points to the v2 server (versioned tags such as `:2.0.0` are published as releases roll out).
+The easiest way to run the opencode server on a separate machine (for example, a VPS) is Docker. Official images are published on GHCR as `ghcr.io/anomalyco/opencode`. **Pin an explicit version tag** — the plain `latest` tag currently points to an opencode **v1** release, so always use a `2.x` tag (for example `:2.0.0`).
 
 1. On the VPS, install Docker Engine with the Compose plugin, then create the project directory:
 
@@ -146,7 +148,7 @@ sudo mkdir -p /opt/opencode && cd /opt/opencode
 ```yaml
 services:
   opencode:
-    image: ghcr.io/anomalyco/opencode:latest
+    image: ghcr.io/anomalyco/opencode:2.0.0
     container_name: opencode
     restart: unless-stopped
     ports:
@@ -206,7 +208,7 @@ Upgrading:
 cd /opt/opencode && sudo docker compose pull && sudo docker compose up -d
 ```
 
-Sessions and credentials survive the upgrade because they live in the volumes above.
+To move to a newer release, bump the image tag in `compose.yaml` (for example `:2.0.0` → `:2.0.1`) and run the command above. Sessions and credentials survive the upgrade because they live in the volumes.
 
 ## Server recommendations
 
@@ -240,7 +242,7 @@ In the extension's admin settings page:
 - **opencode server username** — the basic auth username (default `opencode`). Used only when a password is set.
 - **opencode server password** — the `OPENCODE_SERVER_PASSWORD` value if basic auth is enabled.
 - **Agent** — a preset that shapes how the assistant replies: the standard `build` (answers right away) or `plan` (thinks the answer over first), or the default. The server-side validation falls back to the default agent (with a server-log warning) if a saved name is unknown, so a reply never fails on a typo.
-- **System prompt (persona)** — optional free-text instructions for the assistant's behavior, applied as the agent's system prompt (this is what makes "call yourself Pupsik" type personas work).
+- **System prompt (persona)** — optional free-text instructions for the assistant's behavior, e.g. "call yourself Pupsik and answer in Russian". Stored with each discussion's opencode session (the session's instructions, opencode 2.x) and applied as part of the model's context — so the persona stays out of the visible messages and can differ per discussion.
 - **Model** — the model to use, in `provider/model` format (e.g. `opencode/big-pickle`). Type it manually, or click **Get free models** to fetch the currently available free models from your opencode server and click one to fill the field. Leave empty to use the server's default model. This is independent of the agent: the agent fixes *how* it behaves, the model fixes *which* AI answers.
 - **User assistant** — the user ID of the account that posts the AI replies (required).
 - **User assistant badge** — a toggle plus the text shown in the badge below the assistant's posts. Disabled or empty — no badge is rendered.
@@ -250,7 +252,7 @@ In the extension's admin settings page:
 - **Resource limits** — `max_active_sessions`, `max_messages_per_session`, `session_ttl_days`. Set 0 to disable a limit.
 - **Retries** — `retry_attempts` (total attempts, default 1, max 10) and `retry_delay_seconds` (delay before each retry, default 1, max 120) for requests to the opencode server.
 
-The agent and model are applied when a session is created, so new discussions pick up the latest settings. The assistant's instructions (a "system prompt") are configured on the agent itself, e.g. in `opencode.json`:
+The agent and model are applied when a session is created, so new discussions pick up the latest settings. The assistant's persona can be set directly in the extension's admin page above (it lands in the discussion session's instructions); alternatively the persona can be baked into the agent itself on the server, e.g. in `opencode.json`:
 
 ```json
 {
